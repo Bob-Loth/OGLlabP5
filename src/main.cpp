@@ -375,7 +375,7 @@ public:
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
 		glUniform3f(prog->getUniform("viewPos"), 0.0f, gCamH, 0.0f);
-		glUniform3f(prog->getUniform("lightPos"), 2.0, 2.0, 2.9);
+		glUniform3f(prog->getUniform("lightPos"), 2.0 + lightTrans, 2.0, 2.9);
 
 		// draw the array of bunnies
 		Model->pushMatrix();
