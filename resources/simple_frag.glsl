@@ -11,16 +11,22 @@ uniform vec3 MatSpec;
 in vec3 fragNor;
 in vec3 lightDir;
 //position of the vertex in camera space
-in vec3 EPos;
+in vec3 fragPos;
 
+in vec3 viewFrag;
 void main()
 {
-	//you will need to work with these for lighting
+	//ambient
+	vec3 ambient = MatAmb * 1.0;
+	//diffuse
 	vec3 normal = normalize(fragNor);
 	vec3 light = normalize(lightDir);
-	vec3 ambient = MatAmb * 1.0;
-	vec3 H = normalize(normalize(EPos) + light);
-	vec3 specular = MatSpec * pow(max(0, dot(fragNor,H)),MatShine);
-	vec3 diffuse = 0.1 * MatDif * max(0,dot(fragNor,lightDir));
+	vec3 diffuse = MatDif * max(0,dot(normal,light));
+	//specular
+	
+	vec3 viewDir = normalize(viewFrag - fragPos);
+	vec3 H = normalize(lightDir + viewDir);
+	vec3 specular = MatSpec * pow(max(dot(H,normal), 0.0), MatShine);;
+	
 	color = vec4(ambient + diffuse + specular, 1.0);
 }

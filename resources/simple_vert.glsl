@@ -6,11 +6,13 @@ uniform mat4 V;
 uniform mat4 M;
 
 uniform vec3 lightPos;
+uniform vec3 viewPos;
 
 //keep these and set them correctly
 out vec3 fragNor;
 out vec3 lightDir;
-out vec3 EPos;
+out vec3 fragPos;
+out vec3 viewFrag;
 
 void main()
 {
@@ -18,5 +20,9 @@ void main()
 	//update these as needed
 	fragNor = (M * vec4(vertNor, 0.0)).xyz; 
 	lightDir = lightPos - (M*vertPos).xyz;
-	EPos = (M*vertPos).xyz;
+	viewFrag = viewPos;
+	fragPos = (M*vertPos).xyz;
+
+	
+	
 }

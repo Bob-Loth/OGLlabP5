@@ -135,6 +135,7 @@ public:
 		prog->addUniform("MatSpec");
 		prog->addUniform("MatShine");
 		prog->addUniform("lightPos");
+		prog->addUniform("viewPos");
 		prog->addAttribute("vertPos");
 		prog->addAttribute("vertNor");
 
@@ -368,11 +369,12 @@ public:
 		View->translate(vec3(0, gCamH, 0));
 		//global rotate (the whole scene )
 		View->rotate(gRot, vec3(0, 1, 0));
-
+		
 		// Draw the scene
 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
+		glUniform3f(prog->getUniform("viewPos"), 0.0f, gCamH, 0.0f);
 		glUniform3f(prog->getUniform("lightPos"), 2.0, 2.0, 2.9);
 
 		// draw the array of bunnies
@@ -392,7 +394,7 @@ public:
 			}
 		  }
 		Model->popMatrix();
-
+		
 		//draw the waving HM
 		SetMaterial(prog, 1);
 		drawHierModel(Model);
