@@ -24,8 +24,8 @@ void Shape::measure()
 	float minX, minY, minZ;
 	float maxX, maxY, maxZ;
 
-	minX = minY = minZ = FLT_MAX;
-	maxX = maxY = maxZ = -FLT_MAX;
+	minX = minY = minZ = GL_MAX;
+	maxX = maxY = maxZ = -GL_MAX;
 
 	//Go through all vertices to determine min and max of each dimension
 	for (size_t v = 0; v < posBuf.size() / 3; v++)
