@@ -19,7 +19,7 @@ class Shape
 public:
 
 	void createShape(tinyobj::shape_t & shape);
-	void init();
+	void init(bool textured);
 	void measure();
 	void draw(const std::shared_ptr<Program> prog) const;
 

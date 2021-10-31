@@ -22,7 +22,4 @@ void main()
 	lightDir = lightPos - (M*vertPos).xyz;
 	viewFrag = viewPos;
 	fragPos = (M*vertPos).xyz;
-
-	
-	
 }

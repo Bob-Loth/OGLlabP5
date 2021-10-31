@@ -48,7 +48,7 @@ void Shape::measure()
 	max.z = maxZ;
 }
 
-void Shape::init()
+void Shape::init(bool textured)
 {
 	// Initialize the vertex array object
 	CHECKED_GL_CALL(glGenVertexArrays(1, &vaoID));
@@ -71,8 +71,8 @@ void Shape::init()
 		CHECKED_GL_CALL(glBufferData(GL_ARRAY_BUFFER, norBuf.size()*sizeof(float), &norBuf[0], GL_STATIC_DRAW));
 	}
 
-	// Send the texture array to the GPU
-	if (texBuf.empty())
+	// Send the texture array to the GPU -- changed to stop automatically trying to texture objs with texture data in them. Nightmare bug to figure out.
+	if (texBuf.empty() || textured == false)
 	{
 		texBufID = 0;
 	}
