@@ -22,6 +22,8 @@ public:
 
 	void populateNorBuf(size_t i, glm::vec3 normal);
 
+	void normalizeNorBuf();
+
 	void computeNormals();
 
 	void createShape(tinyobj::shape_t & shape);

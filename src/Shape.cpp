@@ -17,7 +17,57 @@ void Shape::reverseNormals() {
 
 //places 
 void Shape::populateNorBuf(size_t i, glm::vec3 normal) {
+	//the first point
+	norBuf.at(3 * eleBuf.at(i)) += normal.x;
+	norBuf.at(3 * eleBuf.at(i) + 1) += normal.y;
+	norBuf.at(3 * eleBuf.at(i) + 2) += normal.z;
+	//the second point
+	norBuf.at(3 * eleBuf.at(i+1)) += normal.x;
+	norBuf.at(3 * eleBuf.at(i+1) + 1) += normal.y;
+	norBuf.at(3 * eleBuf.at(i+1) + 2) += normal.z;
+	//the third point
+	norBuf.at(3 * eleBuf.at(i+2)) += normal.x;
+	norBuf.at(3 * eleBuf.at(i+2) + 1) += normal.y;
+	norBuf.at(3 * eleBuf.at(i+2) + 2) += normal.z;
+}
 
+void Shape::normalizeNorBuf() {
+	//vertex by vertex
+	int negativex = 0, positivex = 0, zerox = 0;
+	int negativey = 0, positivey = 0, zeroy = 0;
+	int negativez = 0, positivez = 0, zeroz = 0;
+	for (size_t i = 0; i < norBuf.size(); i = i + 3) {//work with 3 coordinates at a time
+		glm::vec3 vn = glm::vec3(norBuf.at(i), norBuf.at(i + 1), norBuf.at(i + 2));
+		vn = glm::normalize(vn);
+		//put the normalized components back
+		norBuf.at(i) = vn.x;
+		norBuf.at(i + 1) = vn.y;
+		norBuf.at(i + 2) = vn.z;
+		if (vn.x < 0) {
+			negativex++;
+		}
+		else if (vn.x > 0) {
+			positivex++;
+		}
+		else { zerox++; }
+		if (vn.y < 0) {
+			negativey++;
+		}
+		else if (vn.y > 0) {
+			positivey++;
+		}
+		else { zeroy++; }
+		if (vn.z < 0) {
+			negativez++;
+		}
+		else if (vn.z > 0) {
+			positivez++;
+		}
+		else { zeroz++; }
+	}
+	cout << positivex << " " << negativex << " " << zerox << endl;
+	cout << positivey << " " << negativey << " " << zeroy << endl;
+	cout << positivez << " " << negativez << " " << zeroz << endl;
 }
 
 void Shape::computeNormals() {
@@ -29,13 +79,13 @@ void Shape::computeNormals() {
 		norBuf.at(i) = 0.0f;
 	}
 	//for every triangle
-	for (size_t i = 0; i < eleBuf.size() / 3; i= i+3) {//do 3 elements of ele buf at a time
+	for (size_t i = 0; i < eleBuf.size(); i= i+3) {//do 3 elements of ele buf at a time
 		//        2
 		//       / \
 		//      v   \
 		//    0/__u__\1
-		//grab a total of 9 floats.
-		glm::vec3 p0 = glm::vec3(posBuf.at(3*eleBuf.at(i)), posBuf.at(3*eleBuf.at(i)+1), posBuf.at(3*eleBuf.at(i)+2));
+		//grab a total of 9 floats from posBuf. eleBuf contains the location of the x-coord of each triangle, add 1 to get y,z.
+		glm::vec3 p0 = glm::vec3(posBuf.at(3 * eleBuf.at(i)), posBuf.at(3 * eleBuf.at(i) + 1), posBuf.at(3 * eleBuf.at(i) + 2));
 		glm::vec3 p1 = glm::vec3(posBuf.at(3 * eleBuf.at(i+1)), posBuf.at(3 * eleBuf.at(i+1) + 1), posBuf.at(3 * eleBuf.at(i+1) + 2));
 		glm::vec3 p2 = glm::vec3(posBuf.at(3 * eleBuf.at(i+2)), posBuf.at(3 * eleBuf.at(i+2) + 1), posBuf.at(3 * eleBuf.at(i+2) + 2));
 		//compute the vectors that minimally describe the triangle
@@ -45,7 +95,8 @@ void Shape::computeNormals() {
 		
 		populateNorBuf(i,normal);
 	}
-	
+	//all done with triangles. Now normalize the summed normal vectors.
+	normalizeNorBuf();
 }
 
 // copy the data from the shape to this object

@@ -304,7 +304,7 @@ public:
 		vector<tinyobj::shape_t> TOshapesB;
  		vector<tinyobj::material_t> objMaterialsB;
 		//load in the mesh and make the shape(s)
- 		rc = tinyobj::LoadObj(TOshapesB, objMaterialsB, errStr, (resourceDirectory + "/bunnyNoNorm.obj").c_str());
+ 		rc = tinyobj::LoadObj(TOshapesB, objMaterialsB, errStr, (resourceDirectory + "/icoNoNormals.obj").c_str());
 		if (!rc) {
 			cerr << errStr << endl;
 		} else {
@@ -676,6 +676,7 @@ public:
 			  Model->pushMatrix();
 				Model->translate(vec3(off+sp*i, 1, (off+sp*j)- 6));
 				Model->scale(vec3(3.85, 3.85, 3.85));
+				Model->scale(vec3(0.1, 0.1, 0.1));//for ico
 				SetMaterial(prog, (i+j)%3);
 				glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 				theBunny->draw(prog);
