@@ -133,6 +133,8 @@ public:
 	float animSpeed = 2;
 	int numThrows = 0;
 	float goalieTime = 0;
+	float shooterRot = 0;
+	bool goalieColor = true;
 	double glTime = 0;
 	//where the ball starts from on the z axis
 	float currX = 0.0f, currY = 0.0f, currZ = 0.0f;
@@ -198,6 +200,12 @@ public:
 		}
 		if (key == GLFW_KEY_E && action == GLFW_PRESS){
 			lightTrans -= 0.25f;
+		}
+		if (key == GLFW_KEY_M && action == GLFW_PRESS) {
+			goalieColor = false;
+		}
+		if (key == GLFW_KEY_M && action == GLFW_RELEASE) {
+			goalieColor = true;
 		}
 		if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -512,14 +520,59 @@ public:
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
    	}
 
-   	
+	void shooterRender(std::shared_ptr<MatrixStack> Model) {
+		Model->pushMatrix();
+		glUniform3f(prog->getUniform("MatAmb"), 0.065f, 0.020f, 0.020f);
+		glUniform3f(prog->getUniform("MatDif"), 0.65f, 0.2f, 0.2f);
+		glUniform3f(prog->getUniform("MatSpec"), 0.65f, 0.2f, 0.2f);
+		glUniform1f(prog->getUniform("MatShine"), 200.0f);
+		Model->loadIdentity();
+		Model->translate(vec3(0, .27, -7.3));
+		Model->rotate(pi<float>() / 2, vec3(-1, 0, 0));
+		Model->rotate(pi<float>() / 2, vec3(0, 0, 1));
+		Model->scale(0.0050f);
+		//draw the lower body
+		setModel(prog, Model);
+		for (size_t i = 0; i < 14; i++) {
+			dummy->at(i).draw(prog);
+		}
+		//draw the upper body
+			Model->pushMatrix();
+				vec3 pivotBelly = getCenterOfBBox(dummy->at(13));
+				Model->translate(pivotBelly);
+				Model->rotate(shooterRot, vec3(0, 0, 1));
+				Model->rotate(0.4*shooterRot, vec3(0, 1, 0));
+				Model->translate(-pivotBelly);
+				setModel(prog, Model);
+				for (size_t i = 14; i < 27; i++) {
+					dummy->at(i).draw(prog);
+				}
+				//reverse-rotate the head and neck so that they stay aligned with hips
+				Model->pushMatrix();
+					Model->rotate(shooterRot, vec3(0, 0, -1));
+					setModel(prog, Model);
+					for (size_t i = 27; i < dummy->size(); i++) {
+						dummy->at(i).draw(prog);
+					}
+				Model->popMatrix();
+			Model->popMatrix();
+		Model->popMatrix();
+	}
 
 	void goalieRender(std::shared_ptr<MatrixStack> Model) {
 		Model->pushMatrix();
-		glUniform3f(prog->getUniform("MatAmb"), 0.020f, 0.065f, 0.020f);
-		glUniform3f(prog->getUniform("MatDif"), 0.2f, 0.65f, 0.2f);
-		glUniform3f(prog->getUniform("MatSpec"), 0.2f, 0.65f, 0.2f);
-		glUniform1f(prog->getUniform("MatShine"), 200.0f);
+		if (goalieColor) {
+			glUniform3f(prog->getUniform("MatAmb"), 0.020f, 0.065f, 0.020f);
+			glUniform3f(prog->getUniform("MatDif"), 0.2f, 0.65f, 0.2f);
+			glUniform3f(prog->getUniform("MatSpec"), 0.2f, 0.65f, 0.2f);
+			glUniform1f(prog->getUniform("MatShine"), 200.0f);
+		}
+		else {
+			glUniform3f(prog->getUniform("MatAmb"), 0.085f, 0.085f, 0.020f);
+			glUniform3f(prog->getUniform("MatDif"), 0.85f, 0.85f, 0.2f);
+			glUniform3f(prog->getUniform("MatSpec"), 0.85f, 0.85f, 0.2f);
+			glUniform1f(prog->getUniform("MatShine"), 200.0f);
+		}
 		Model->loadIdentity();
 		//get the whole thing into position
 		Model->translate(vec3(0, .27 + 0.04 * goalieTime, -9.3));
@@ -536,14 +589,14 @@ public:
 		dummy->at(28).draw(prog);
 
 		//right side
-		dummyArmRender(Model, 15, 1);
+		goalieArmRender(Model, 15, 1);
 
 		//left side
-		dummyArmRender(Model, 21, -1);
+		goalieArmRender(Model, 21, -1);
 		Model->popMatrix();
 	}
 
-	void dummyArmRender(std::shared_ptr<MatrixStack> Model, int armIndex, int mirror) {
+	void goalieArmRender(std::shared_ptr<MatrixStack> Model, int armIndex, int mirror) {
 		Model->pushMatrix();
 		vec3 pivotTorso = getCenterOfBBox(dummy->at(14));
 		Model->translate(vec3(0, mirror * (1 * goalieTime + 5), 3 * goalieTime));
@@ -688,6 +741,8 @@ public:
 		goalRender(Model);
 		//goalie
 		goalieRender(Model);
+		//shooter
+		shooterRender(Model);
 		//pool
 		
 		poolRender(Model);
@@ -713,6 +768,7 @@ public:
 		eTheta = std::max(0.0f, (float)sin(glfwGetTime()));
 		hTheta = std::max(0.0f, (float)cos(glfwGetTime()));
 		//how fast the goalie does his animation, controlled by animSpeed.
+		shooterRot = cos(2 * pi<double>() * glTime);
 		goalieTime = cos(2 * pi<double>() * glTime / animSpeed);
 		// Pop matrix stacks.
 		Projection->popMatrix();
