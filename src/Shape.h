@@ -18,6 +18,12 @@ class Shape
 
 public:
 
+	void reverseNormals();
+
+	void populateNorBuf(size_t i, glm::vec3 normal);
+
+	void computeNormals();
+
 	void createShape(tinyobj::shape_t & shape);
 	void init(bool textured);
 	void measure();

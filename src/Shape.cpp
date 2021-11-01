@@ -8,7 +8,45 @@
 #include "Program.h"
 
 using namespace std;
+//takes the unit vectors in norBuf and reverses them.
+void Shape::reverseNormals() {
+	for (int i = 0; i < norBuf.size(); i++) {
+		norBuf.at(i) = -norBuf.at(i);
+	}
+}
 
+//places 
+void Shape::populateNorBuf(size_t i, glm::vec3 normal) {
+
+}
+
+void Shape::computeNormals() {
+
+	//if there were normals there, get rid of them and use our own.
+	norBuf.clear();
+	norBuf.resize(posBuf.size());
+	for (size_t i = 0; i < norBuf.size(); i++) {
+		norBuf.at(i) = 0.0f;
+	}
+	//for every triangle
+	for (size_t i = 0; i < eleBuf.size() / 3; i= i+3) {//do 3 elements of ele buf at a time
+		//        2
+		//       / \
+		//      v   \
+		//    0/__u__\1
+		//grab a total of 9 floats.
+		glm::vec3 p0 = glm::vec3(posBuf.at(3*eleBuf.at(i)), posBuf.at(3*eleBuf.at(i)+1), posBuf.at(3*eleBuf.at(i)+2));
+		glm::vec3 p1 = glm::vec3(posBuf.at(3 * eleBuf.at(i+1)), posBuf.at(3 * eleBuf.at(i+1) + 1), posBuf.at(3 * eleBuf.at(i+1) + 2));
+		glm::vec3 p2 = glm::vec3(posBuf.at(3 * eleBuf.at(i+2)), posBuf.at(3 * eleBuf.at(i+2) + 1), posBuf.at(3 * eleBuf.at(i+2) + 2));
+		//compute the vectors that minimally describe the triangle
+		glm::vec3 u = p1 - p0;
+		glm::vec3 v = p2 - p0;
+		glm::vec3 normal = glm::cross(u, v);
+		
+		populateNorBuf(i,normal);
+	}
+	
+}
 
 // copy the data from the shape to this object
 void Shape::createShape(tinyobj::shape_t & shape)

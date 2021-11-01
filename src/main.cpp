@@ -120,7 +120,9 @@ public:
 	//global data (larger program should be encapsulated)
 	vec3 gMin;
 	float gRot = 0;
+	float gTilt = 0;
 	float gCamH = 0;
+	vec3 goalTrans = vec3(0, 1.1, -9.5);
 	//animation data
 	float lightTrans = 0;
 	float gTrans = -3;
@@ -171,6 +173,12 @@ public:
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		}
 		//update global camera rotate
+		if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+			gTilt -= 0.2f;
+		}
+		if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+			gTilt += 0.2f;
+		}
 		if (key == GLFW_KEY_A && action == GLFW_PRESS) {
 			gRot -= 0.2f;
 		}
@@ -218,6 +226,12 @@ public:
 	void init(const std::string& resourceDirectory)
 	{
 		GLSL::checkVersion();
+
+		//allows for translucent water
+		glEnable(GL_BLEND);
+		//use alpha for source color, 1-alpha for destination color
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 
 		// Set background color.
 		glClearColor(.72f, .84f, 1.06f, 1.0f);
@@ -290,13 +304,14 @@ public:
 		vector<tinyobj::shape_t> TOshapesB;
  		vector<tinyobj::material_t> objMaterialsB;
 		//load in the mesh and make the shape(s)
- 		rc = tinyobj::LoadObj(TOshapesB, objMaterialsB, errStr, (resourceDirectory + "/bunny.obj").c_str());
+ 		rc = tinyobj::LoadObj(TOshapesB, objMaterialsB, errStr, (resourceDirectory + "/bunnyNoNorm.obj").c_str());
 		if (!rc) {
 			cerr << errStr << endl;
 		} else {
 			
 			theBunny = make_shared<Shape>();
 			theBunny->createShape(TOshapesB[0]);
+			theBunny->computeNormals();
 			theBunny->measure();
 			theBunny->init(false);
 		}
@@ -341,11 +356,13 @@ public:
 			for (size_t i = 0; i < TOshapes6.size(); ++i) {
 				Shape s;
 				s.createShape(TOshapes6[i]);
+				s.reverseNormals();
 				pool->push_back(s);
 				pool->at(i).measure();
 				pool->at(i).init(false);
 
 			}
+			
 			poolBBox = getMultiShapeBBox(pool);
 		}
 		//code to load in the ground plane (CPU defined data passed to GPU)
@@ -411,7 +428,11 @@ public:
      	glBindVertexArray(GroundVertexArrayID);
      	texture0->bind(curS->getUniform("Texture0"));
 		//draw the ground plane 
-  		SetModel(vec3(0, -1, 0), 0, 0, 1, curS);
+		mat4 Trans = glm::translate(glm::mat4(1.0f), vec3(0,-0.15,0));
+		mat4 ScaleS = glm::scale(glm::mat4(1.0f), vec3(0.15,1,0.6));
+		mat4 ctm = Trans * ScaleS;
+		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
+
   		glEnableVertexAttribArray(0);
   		glBindBuffer(GL_ARRAY_BUFFER, GrndBuffObj);
   		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -456,6 +477,24 @@ public:
     			glUniform3f(curS->getUniform("MatSpec"), 0.02f, 0.25f, 0.45f);
     			glUniform1f(curS->getUniform("MatShine"), 27.9f);
     		break;
+			case 3:
+				glUniform3f(prog->getUniform("MatAmb"), 0.09f, 0.09f, 0.09f);
+				glUniform3f(prog->getUniform("MatDif"), 0.2f, 0.2f, 0.65f);
+				glUniform3f(prog->getUniform("MatSpec"), 0.2f, 0.65f, 0.2f);
+				glUniform1f(prog->getUniform("MatShine"), 120.0f);
+			break;
+			case 4:
+				glUniform3f(prog->getUniform("MatAmb"), 0.095f, 0.095f, 0.095f);
+				glUniform3f(prog->getUniform("MatDif"), 0.90f, 0.90f, 0.9f);
+				glUniform3f(prog->getUniform("MatSpec"), 0.40f, 0.40f, 0.90f);
+				glUniform1f(prog->getUniform("MatShine"), 16.0f);
+			break;
+			case 5:
+				glUniform3f(prog->getUniform("MatAmb"), 0.095f, 0.095f, 0.095f);
+				glUniform3f(prog->getUniform("MatDif"), 0.40f, 0.40f, 0.4f);
+				glUniform3f(prog->getUniform("MatSpec"), 0.40f, 0.40f, 0.40f);
+				glUniform1f(prog->getUniform("MatShine"), 16000.0f);
+				break;
   		}
 	}
 
@@ -473,22 +512,7 @@ public:
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
    	}
 
-   	/* code to draw waving hierarchical model */
-   	void drawHierModel(shared_ptr<MatrixStack> Model) {
-   		// draw hierarchical mesh - replace with your code if desired
-		Model->pushMatrix();
-			Model->loadIdentity();
-			Model->translate(vec3(gTrans, 0, 6));
-			
-			//draw the torso with these transforms
-			Model->pushMatrix();
-			  Model->scale(vec3(1.15, 1.35, 1.0));
-			  setModel(prog, Model);
-			  sphere->draw(prog);
-			Model->popMatrix();
-			
-		Model->popMatrix();
-   	}
+   	
 
 	void goalieRender(std::shared_ptr<MatrixStack> Model) {
 		Model->pushMatrix();
@@ -498,10 +522,10 @@ public:
 		glUniform1f(prog->getUniform("MatShine"), 200.0f);
 		Model->loadIdentity();
 		//get the whole thing into position
-		Model->translate(vec3(0, -2.8 + 0.4 * goalieTime, 1));
+		Model->translate(vec3(0, .27 + 0.04 * goalieTime, -9.3));
 		Model->rotate(pi<float>() / 2, vec3(-1, 0, 0));
 		Model->rotate(pi<float>() / 2, vec3(0, 0, -1));
-		Model->scale(0.025f);
+		Model->scale(0.0050f);
 		setModel(prog, Model);
 		//draw torso and below
 		for (size_t i = 0; i < 15; ++i) {
@@ -558,13 +582,10 @@ public:
 
 	void goalRender(std::shared_ptr<MatrixStack> Model) {
 		Model->pushMatrix();
-		glUniform3f(prog->getUniform("MatAmb"), 0.095f, 0.095f, 0.095f);
-		glUniform3f(prog->getUniform("MatDif"), 0.90f, 0.90f, 0.9f);
-		glUniform3f(prog->getUniform("MatSpec"), 0.40f, 0.40f, 0.90f);
-		glUniform1f(prog->getUniform("MatShine"), 16000.0f);
+		SetMaterial(prog, 5);
 		Model->loadIdentity();
-		Model->translate(vec3(0, 1, 0));
-		Model->scale(vec3(3.6, 2.7, 3));
+		Model->translate(goalTrans);
+		Model->scale(vec3(.72, .54, .6));
 		setModel(prog, Model);
 		goal->draw(prog);
 		Model->popMatrix();
@@ -572,15 +593,22 @@ public:
 
 	void poolRender(std::shared_ptr<MatrixStack> Model) {
 		Model->pushMatrix();
-		glUniform3f(prog->getUniform("MatAmb"), 0.09f, 0.09f, 0.09f);
-		glUniform3f(prog->getUniform("MatDif"), 0.2f, 0.2f, 0.65f);
-		glUniform3f(prog->getUniform("MatSpec"), 0.2f, 0.65f, 0.2f);
-		glUniform1f(prog->getUniform("MatShine"), 120.0f);
+		SetMaterial(prog, 3);
 		Model->loadIdentity();
-		Model->translate(vec3(0, 0, 0));
-		Model->scale(vec3(10, 10, 10));
+		Model->translate(vec3(0, 2, 0));
+		Model->rotate(pi<float>(), vec3(0, 1, 0));
+		Model->scale(vec3(12, 12, 12));
 		setModel(prog, Model);
 		for (size_t i = 0; i < pool->size(); ++i) {
+			if (i == 1) {
+				continue; //don't draw the water
+			}
+			if (i <= 1) {
+				SetMaterial(prog, 3);
+			}
+			else {
+				SetMaterial(prog, 4);
+			}
 			pool->at(i).draw(prog);
 		}
 		Model->popMatrix();
@@ -614,9 +642,9 @@ public:
 		View->loadIdentity();
 		//for now the goal is centered on the origin, so cameraCenter is all 0, 
 		//but if you wanted to rotate around an arbitrary object, that's how you would do it
-		vec3 cameraCenter = getCenterOfBBox(*goal);
-		int cameraDistance = 15;
-		int cameraHeight = 3;
+		vec3 cameraCenter = getCenterOfBBox(*goal) + goalTrans;
+		int cameraDistance = 5;
+		int cameraHeight = 5;
 		CameraPos = vec3(
 			//sin and cos to get camera moving on a circle cameraHeight units above x-z plane, with a radius of cameraDistance, centered on CameraCenter.
 			//  (Z)| /
@@ -625,7 +653,7 @@ public:
 				//    X|_/
 				//(Y)/ |
 			cameraCenter.x + cameraDistance * (sin(gRot * pi<double>() / 4.0)),
-			cameraCenter.y + cameraHeight,
+			cameraCenter.y + cameraHeight * (gTilt * pi<double>() / 4.0),
 			cameraCenter.z + cameraDistance * (cos(gRot * pi<double>() / 4.0)));
 		//gives matrix of a view from arg1 to arg2
 			glm::mat4 CameraMatrix = glm::lookAt(CameraPos, cameraCenter, vec3(0, 1, 0));
@@ -636,7 +664,7 @@ public:
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
 		glUniform3f(prog->getUniform("viewPos"), cameraCenter.x, cameraCenter.y, cameraCenter.z);
-		glUniform3f(prog->getUniform("lightPos"), -2.0f + lightTrans, 2.0f, 2.0f);
+		glUniform3f(prog->getUniform("lightPos"), -2.0f , 2.0f, 2.0f - lightTrans);
 
 		// draw the array of bunnies
 		Model->pushMatrix();
@@ -646,8 +674,8 @@ public:
 		  for (int i =0; i < 3; i++) {
 		  	for (int j=0; j < 3; j++) {
 			  Model->pushMatrix();
-				Model->translate(vec3(off+sp*i, -1, off+sp*j));
-				Model->scale(vec3(0.85, 0.85, 0.85));
+				Model->translate(vec3(off+sp*i, 1, (off+sp*j)- 6));
+				Model->scale(vec3(3.85, 3.85, 3.85));
 				SetMaterial(prog, (i+j)%3);
 				glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 				theBunny->draw(prog);
@@ -663,6 +691,8 @@ public:
 		
 		poolRender(Model);
 		
+
+
 		prog->unbind();
 
 		
@@ -673,7 +703,7 @@ public:
 		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
 		glUniformMatrix4fv(texProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 				
-		//drawGround(texProg);
+		drawGround(texProg);
 
 		texProg->unbind();
 		
