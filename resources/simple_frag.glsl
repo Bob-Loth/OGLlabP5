@@ -24,9 +24,9 @@ void main()
 	vec3 diffuse = MatDif * max(0,dot(normal,light));
 	//specular
 	
-	vec3 viewDir = normalize(viewFrag - fragPos);
+	vec3 viewDir = normalize(viewFrag - fragPos); //vector from fragment's position vector to the position of the camera
 	vec3 H = normalize(lightDir + viewDir);
-	vec3 specular = MatSpec * pow(max(dot(H,normal), 0.0), MatShine);;
+	vec3 specular = MatSpec * pow(max(dot(H,normal), 0.0), MatShine);
 	
-	color = vec4(ambient + diffuse + specular, 1.0);
+	color = vec4((ambient + diffuse + specular), 1.0);
 }

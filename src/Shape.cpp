@@ -33,9 +33,7 @@ void Shape::populateNorBuf(size_t i, glm::vec3 normal) {
 
 void Shape::normalizeNorBuf() {
 	//vertex by vertex
-	int negativex = 0, positivex = 0, zerox = 0;
-	int negativey = 0, positivey = 0, zeroy = 0;
-	int negativez = 0, positivez = 0, zeroz = 0;
+	
 	for (size_t i = 0; i < norBuf.size(); i = i + 3) {//work with 3 coordinates at a time
 		glm::vec3 vn = glm::vec3(norBuf.at(i), norBuf.at(i + 1), norBuf.at(i + 2));
 		vn = glm::normalize(vn);
@@ -43,31 +41,9 @@ void Shape::normalizeNorBuf() {
 		norBuf.at(i) = vn.x;
 		norBuf.at(i + 1) = vn.y;
 		norBuf.at(i + 2) = vn.z;
-		if (vn.x < 0) {
-			negativex++;
-		}
-		else if (vn.x > 0) {
-			positivex++;
-		}
-		else { zerox++; }
-		if (vn.y < 0) {
-			negativey++;
-		}
-		else if (vn.y > 0) {
-			positivey++;
-		}
-		else { zeroy++; }
-		if (vn.z < 0) {
-			negativez++;
-		}
-		else if (vn.z > 0) {
-			positivez++;
-		}
-		else { zeroz++; }
+		
 	}
-	cout << positivex << " " << negativex << " " << zerox << endl;
-	cout << positivey << " " << negativey << " " << zeroy << endl;
-	cout << positivez << " " << negativez << " " << zeroz << endl;
+	
 }
 
 void Shape::computeNormals() {

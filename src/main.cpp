@@ -106,7 +106,7 @@ public:
 	shared_ptr<Shape> sphere;
 	shared_ptr<vector<Shape>> dummy = make_shared<vector<Shape>>();
 	vector<vec3> dummyBBox;
-	shared_ptr<Shape> theBunny;
+	shared_ptr<Shape> ball;
 
 	//global data for ground plane - direct load constant defined CPU data to GPU (not obj)
 	GLuint GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj;
@@ -121,15 +121,17 @@ public:
 	vec3 gMin;
 	float gRot = 0;
 	float gTilt = 0;
+	float gZoom = 0;
 	float gCamH = 0;
 	vec3 goalTrans = vec3(0, 1.1, -9.5);
+	vec3 shooterTrans = vec3(0, .27, -7.3);
 	//animation data
 	float lightTrans = 0;
 	float gTrans = -3;
 	float sTheta = 0;
 	float eTheta = 0;
 	float hTheta = 0;
-	
+	shared_ptr<MatrixStack> rHandAnchor;
 	float animSpeed = 2;
 	int numThrows = 0;
 	float goalieTime = 0;
@@ -194,24 +196,33 @@ public:
 		if (key == GLFW_KEY_F && action == GLFW_PRESS){
 			gCamH  -= 0.25f;
 		}
-
+		//move light
 		if (key == GLFW_KEY_Q && action == GLFW_PRESS){
-			lightTrans += 0.25f;
+			lightTrans += 1.f;
 		}
 		if (key == GLFW_KEY_E && action == GLFW_PRESS){
-			lightTrans -= 0.25f;
+			lightTrans -= 1.f;
 		}
+		//change color of goalie
 		if (key == GLFW_KEY_M && action == GLFW_PRESS) {
 			goalieColor = false;
 		}
 		if (key == GLFW_KEY_M && action == GLFW_RELEASE) {
 			goalieColor = true;
 		}
+		//wireframe
 		if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 		}
 		if (key == GLFW_KEY_Z && action == GLFW_RELEASE) {
 			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		}
+		//move camera back/forth
+		if (key == GLFW_KEY_G && action == GLFW_PRESS) {
+			gZoom = gZoom + 1;
+		}
+		if (key == GLFW_KEY_H && action == GLFW_PRESS) {
+			gZoom = fmin(0,gZoom - 1);
 		}
 	}
 
@@ -224,6 +235,7 @@ public:
 			 glfwGetCursorPos(window, &posX, &posY);
 			 cout << "Pos X " << posX <<  " Pos Y " << posY << endl;
 		}
+		
 	}
 
 	void resizeCallback(GLFWwindow *window, int width, int height)
@@ -294,34 +306,22 @@ public:
  		vector<tinyobj::material_t> objMaterials;
  		string errStr;
 		//load in the mesh and make the shape(s)
- 		bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (resourceDirectory + "/sphere.obj").c_str());
-		if (!rc) {
-			cerr << errStr << endl;
-		} else {
-			sphere = make_shared<Shape>();
-			sphere->createShape(TOshapes[0]);
-			sphere->measure();
-			sphere->init(false);
-		}
-		//read out information stored in the shape about its size - something like this...
-		//then do something with that information.....
-		gMin.x = sphere->min.x;
-		gMin.y = sphere->min.y;
+ 		
 
 		// Initialize bunny mesh.
 		vector<tinyobj::shape_t> TOshapesB;
  		vector<tinyobj::material_t> objMaterialsB;
 		//load in the mesh and make the shape(s)
- 		rc = tinyobj::LoadObj(TOshapesB, objMaterialsB, errStr, (resourceDirectory + "/icoNoNormals.obj").c_str());
+ 		bool rc = tinyobj::LoadObj(TOshapesB, objMaterialsB, errStr, (resourceDirectory + "/icoNoNormals.obj").c_str());
 		if (!rc) {
 			cerr << errStr << endl;
 		} else {
 			
-			theBunny = make_shared<Shape>();
-			theBunny->createShape(TOshapesB[0]);
-			theBunny->computeNormals();
-			theBunny->measure();
-			theBunny->init(false);
+			ball = make_shared<Shape>();
+			ball->createShape(TOshapesB[0]);
+			ball->computeNormals();
+			ball->measure();
+			ball->init(false);
 		}
 
 		vector<tinyobj::shape_t> TOshapes3;
@@ -364,6 +364,7 @@ public:
 			for (size_t i = 0; i < TOshapes6.size(); ++i) {
 				Shape s;
 				s.createShape(TOshapes6[i]);
+				//s.computeNormals();
 				s.reverseNormals();
 				pool->push_back(s);
 				pool->at(i).measure();
@@ -527,7 +528,7 @@ public:
 		glUniform3f(prog->getUniform("MatSpec"), 0.65f, 0.2f, 0.2f);
 		glUniform1f(prog->getUniform("MatShine"), 200.0f);
 		Model->loadIdentity();
-		Model->translate(vec3(0, .27, -7.3));
+		Model->translate(shooterTrans);
 		Model->rotate(pi<float>() / 2, vec3(-1, 0, 0));
 		Model->rotate(pi<float>() / 2, vec3(0, 0, 1));
 		Model->scale(0.0050f);
@@ -540,16 +541,22 @@ public:
 			Model->pushMatrix();
 				vec3 pivotBelly = getCenterOfBBox(dummy->at(13));
 				Model->translate(pivotBelly);
-				Model->rotate(shooterRot, vec3(0, 0, 1));
-				Model->rotate(0.4*shooterRot, vec3(0, 1, 0));
+				Model->rotate(0.5*shooterRot, vec3(0, 0, 1));
+				Model->rotate(0.2*shooterRot, vec3(0, 1, 0));
 				Model->translate(-pivotBelly);
 				setModel(prog, Model);
-				for (size_t i = 14; i < 27; i++) {
-					dummy->at(i).draw(prog);
-				}
+				dummy->at(14).draw(prog);
+				//draw the right arm
+				shooterRightArmRender(Model);
+				// draw the left arm
+				shooterLeftArmRender(Model);
 				//reverse-rotate the head and neck so that they stay aligned with hips
 				Model->pushMatrix();
-					Model->rotate(shooterRot, vec3(0, 0, -1));
+					vec3 pivotNeck = getCenterOfBBox(dummy->at(27));
+					Model->translate(pivotNeck);
+					Model->rotate(0.5*shooterRot, vec3(0, 0, -1));
+					Model->rotate(0.2 * shooterRot, vec3(0, -1, 0));
+					Model->translate(-pivotNeck);
 					setModel(prog, Model);
 					for (size_t i = 27; i < dummy->size(); i++) {
 						dummy->at(i).draw(prog);
@@ -558,6 +565,111 @@ public:
 			Model->popMatrix();
 		Model->popMatrix();
 	}
+
+	void shooterRightArmRender(std::shared_ptr<MatrixStack> Model) {
+		int mirror = 1;
+		int armIndex = 15;
+		float shoulderRot = shooterRot;
+		float elbowRot = cos(2 * pi<double>());
+		Model->pushMatrix();
+			vec3 pivotTorso = getCenterOfBBox(dummy->at(14));
+			Model->translate(vec3(0, mirror * (1 * -0.5 + 5), 3 * -0.5));
+			setModel(prog, Model);
+			dummy->at(armIndex).draw(prog);
+				Model->pushMatrix();
+				vec3 rShoulder = getCenterOfBBox(dummy->at(armIndex));
+				Model->translate(rShoulder); //center of shoulder
+				//rotate upper arm towards goal just a small amount at the end of the throw. Hips, chest, and elbow does most of the work.
+				Model->rotate((pi<float>() / 8) * shoulderRot + (pi<float>() / 8), vec3(mirror * 0, 0, 1)); 
+				Model->translate(-rShoulder);
+				setModel(prog, Model);
+				dummy->at(armIndex + 1).draw(prog);
+				dummy->at(armIndex + 2).draw(prog);
+
+					Model->pushMatrix();
+						vec3 rElbow = getCenterOfBBox(dummy->at(armIndex + 2));
+						Model->translate(rElbow); //center of elbow
+						Model->rotate((pi<float>() / 4), vec3(mirror * -1, 0, 0));
+						Model->rotate((pi<float>() / 4) * elbowRot- (pi<float>() / 4), vec3(mirror * 0, 1, 0));
+						Model->translate(-rElbow);
+						setModel(prog, Model);
+						setModel(prog, Model);
+						dummy->at(armIndex + 3).draw(prog);
+						dummy->at(armIndex + 4).draw(prog);
+						Model->pushMatrix();
+						vec3 rWrist = getCenterOfBBox(dummy->at(armIndex + 4));
+						Model->translate(rWrist); //center of wrist
+						Model->rotate(-0.5*pi<float>()/2*shooterRot +  pi<float>() / 2, vec3(0, -1, 0));
+						
+						Model->translate(-rWrist);
+						Model->translate(getCenterOfBBox(dummy->at(armIndex + 5))); //move the ctm to the hand
+						rHandAnchor = make_shared<MatrixStack>(*Model); //snapshot the ctm at this point
+						Model->translate(-getCenterOfBBox(dummy->at(armIndex + 5)));
+						setModel(prog, Model);
+						dummy->at(armIndex + 5).draw(prog);
+					Model->popMatrix();
+				Model->popMatrix();
+			Model->popMatrix();
+		Model->popMatrix();
+	}
+
+	void ballRender(std::shared_ptr<MatrixStack> Model) {
+		rHandAnchor->pushMatrix();
+		glUniform3f(prog->getUniform("MatAmb"), 0.065f, 0.065f, 0.020f);
+		glUniform3f(prog->getUniform("MatDif"), 0.65f, 0.65f, 0.2f);
+		glUniform3f(prog->getUniform("MatSpec"), 0.65f, 0.65f, 0.2f);
+		glUniform1f(prog->getUniform("MatShine"), 20.0f);
+		rHandAnchor->scale(12);
+		rHandAnchor->translate(vec3(0, 0, -1));
+		setModel(prog, rHandAnchor);
+
+		ball->draw(prog);
+		rHandAnchor->popMatrix();
+	}
+
+	void shooterLeftArmRender(std::shared_ptr<MatrixStack> Model) {
+		int mirror = -1;
+		int armIndex = 21;
+
+		Model->pushMatrix();
+			vec3 pivotTorso = getCenterOfBBox(dummy->at(14));
+			Model->translate(vec3(0, mirror * (1 * -0.5 + 5), 3 * -0.5));
+			setModel(prog, Model);
+			dummy->at(armIndex).draw(prog);
+				Model->pushMatrix();
+				vec3 rShoulder = getCenterOfBBox(dummy->at(armIndex));
+				Model->translate(rShoulder); //center of shoulder
+				Model->rotate((pi<float>() / 4) * -0.5 - (pi<float>() / 8), vec3(mirror * -1, 0, 0));
+				Model->translate(-rShoulder);
+				setModel(prog, Model);
+				dummy->at(armIndex + 1).draw(prog);
+				dummy->at(armIndex + 2).draw(prog);
+
+					Model->pushMatrix();
+						vec3 rElbow = getCenterOfBBox(dummy->at(armIndex + 2));
+						Model->translate(rElbow); //center of shoulder
+						Model->rotate((pi<float>() / 6) * -0.5 - (pi<float>() / 16), vec3(mirror * -1, 0, 0));
+						Model->translate(-rElbow);
+						setModel(prog, Model);
+						setModel(prog, Model);
+						dummy->at(armIndex + 3).draw(prog);
+						dummy->at(armIndex + 4).draw(prog);
+						Model->pushMatrix();
+						vec3 rWrist = getCenterOfBBox(dummy->at(armIndex + 4));
+						Model->translate(rWrist); //center of shoulder
+						Model->rotate(pi<float>() / 2, vec3(0, -1, 0));
+						Model->translate(-rWrist);
+						
+						
+						setModel(prog, Model);
+						
+						dummy->at(armIndex + 5).draw(prog);
+					Model->popMatrix();
+				Model->popMatrix();
+			Model->popMatrix();
+		Model->popMatrix();
+	}
+	
 
 	void goalieRender(std::shared_ptr<MatrixStack> Model) {
 		Model->pushMatrix();
@@ -695,19 +807,16 @@ public:
 		View->loadIdentity();
 		//for now the goal is centered on the origin, so cameraCenter is all 0, 
 		//but if you wanted to rotate around an arbitrary object, that's how you would do it
-		vec3 cameraCenter = getCenterOfBBox(*goal) + goalTrans;
-		int cameraDistance = 5;
-		int cameraHeight = 5;
+		vec3 cameraCenter = shooterTrans;
+		int cameraDistance = fmax(3,3 - gZoom);
+		int cameraHeight = 1;
 		CameraPos = vec3(
 			//sin and cos to get camera moving on a circle cameraHeight units above x-z plane, with a radius of cameraDistance, centered on CameraCenter.
-			//  (Z)| /
-			//	  /T7\
-				// --+-|--+-- (X)
-				//    X|_/
-				//(Y)/ |
+			
 			cameraCenter.x + cameraDistance * (sin(gRot * pi<double>() / 4.0)),
-			cameraCenter.y + cameraHeight * (gTilt * pi<double>() / 4.0),
+			cameraCenter.y + cameraHeight * (gTilt * pi<double>() / 4.0) + cameraHeight,
 			cameraCenter.z + cameraDistance * (cos(gRot * pi<double>() / 4.0)));
+		
 		//gives matrix of a view from arg1 to arg2
 			glm::mat4 CameraMatrix = glm::lookAt(CameraPos, cameraCenter, vec3(0, 1, 0));
 			View->multMatrix(CameraMatrix);
@@ -719,32 +828,17 @@ public:
 		glUniform3f(prog->getUniform("viewPos"), cameraCenter.x, cameraCenter.y, cameraCenter.z);
 		glUniform3f(prog->getUniform("lightPos"), -2.0f , 2.0f, 2.0f - lightTrans);
 
-		// draw the array of bunnies
-		Model->pushMatrix();
-
-		float sp = 3.0;
-		float off = -3.5;
-		  for (int i =0; i < 3; i++) {
-		  	for (int j=0; j < 3; j++) {
-			  Model->pushMatrix();
-				Model->translate(vec3(off+sp*i, 1, (off+sp*j)- 6));
-				Model->scale(vec3(3.85, 3.85, 3.85));
-				Model->scale(vec3(0.1, 0.1, 0.1));//for ico
-				SetMaterial(prog, (i+j)%3);
-				glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-				theBunny->draw(prog);
-			  Model->popMatrix();
-			}
-		  }
-		Model->popMatrix();
+		
+		
 		//goal
 		goalRender(Model);
 		//goalie
 		goalieRender(Model);
 		//shooter
 		shooterRender(Model);
+		//ball
+		ballRender(Model);
 		//pool
-		
 		poolRender(Model);
 		
 
@@ -768,7 +862,7 @@ public:
 		eTheta = std::max(0.0f, (float)sin(glfwGetTime()));
 		hTheta = std::max(0.0f, (float)cos(glfwGetTime()));
 		//how fast the goalie does his animation, controlled by animSpeed.
-		shooterRot = cos(2 * pi<double>() * glTime);
+		shooterRot = cos(pi<double>() * glTime);
 		goalieTime = cos(2 * pi<double>() * glTime / animSpeed);
 		// Pop matrix stacks.
 		Projection->popMatrix();
