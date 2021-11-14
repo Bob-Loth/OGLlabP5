@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <glad/glad.h>
+#include <chrono>
 
 #include "GLSL.h"
 #include "Program.h"
@@ -92,7 +93,10 @@ class Application : public EventCallbacks
 public:
 
 	WindowManager * windowManager = nullptr;
-
+	
+	double mousePrevX, mousePrevY, deltaMouseX, deltaMouseY;
+	double xSensitivity = 0.01;
+	double ySensitivity = 0.01;
 	// Our shader program - use this one for Blinn-Phong
 	std::shared_ptr<Program> prog;
 
@@ -119,10 +123,19 @@ public:
 
 	//global data (larger program should be encapsulated)
 	vec3 gMin;
-	float gRot = 0;
+	bool debug = true;
+	float xRot = 0, yRot = 0;
+	int wState = GLFW_RELEASE, aState = GLFW_RELEASE, sState = GLFW_RELEASE, dState = GLFW_RELEASE;
 	float gTilt = 0;
 	float gZoom = 0;
 	float gCamH = 0;
+	vec3 eyePos = vec3(0, 0, 0);
+	vec3 w = vec3(0, 0, 0);
+	vec3 u = vec3(0, 0, 0);
+	vec3 v = vec3(0, 0, 0);
+	
+	bool firstMouse = true;
+	float movementSensitivity = 0.1;
 	vec3 goalTrans = vec3(0, 1.1, -9.5);
 	vec3 shooterTrans = vec3(0, .27, -7.3);
 	//animation data
@@ -172,29 +185,34 @@ public:
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
+
 		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		{
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		}
-		//update global camera rotate
-		if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-			gTilt -= 0.2f;
+		
+		sState = glfwGetKey(window, GLFW_KEY_S);
+		if (sState == GLFW_PRESS || (key == GLFW_KEY_S && action == GLFW_PRESS)) {
+			eyePos += movementSensitivity * w;
 		}
-		if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-			gTilt += 0.2f;
+		wState = glfwGetKey(window, GLFW_KEY_W);
+		if (wState == GLFW_PRESS || (key == GLFW_KEY_W && action == GLFW_PRESS)) {
+			eyePos -= movementSensitivity * w;
 		}
-		if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-			gRot -= 0.2f;
+		aState = glfwGetKey(window, GLFW_KEY_A);
+		if (aState == GLFW_PRESS || (key == GLFW_KEY_A && action == GLFW_PRESS)) {
+			eyePos += movementSensitivity * cross(w, vec3(0,1,0));
 		}
-		if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-			gRot += 0.2f;
+		dState = glfwGetKey(window, GLFW_KEY_D);
+		if (dState == GLFW_PRESS || (key == GLFW_KEY_D && action == GLFW_PRESS)) {
+			eyePos -= movementSensitivity * cross(w, vec3(0,1,0));
 		}
 		//update camera height
 		if (key == GLFW_KEY_S && action == GLFW_PRESS){
-			gCamH  += 0.25f;
+			//gCamH  += 0.25f;
 		}
 		if (key == GLFW_KEY_F && action == GLFW_PRESS){
-			gCamH  -= 0.25f;
+			//gCamH  -= 0.25f;
 		}
 		//move light
 		if (key == GLFW_KEY_Q && action == GLFW_PRESS){
@@ -217,12 +235,15 @@ public:
 		if (key == GLFW_KEY_Z && action == GLFW_RELEASE) {
 			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		}
-		//move camera back/forth
-		if (key == GLFW_KEY_G && action == GLFW_PRESS) {
-			gZoom = gZoom + 1;
+		//adjust xy sensitivity
+		if (key == GLFW_KEY_EQUAL && action == GLFW_PRESS) {
+			xSensitivity *= 2;
+			ySensitivity *= 2;
+
 		}
-		if (key == GLFW_KEY_H && action == GLFW_PRESS) {
-			gZoom = fmin(0,gZoom - 1);
+		if (key == GLFW_KEY_MINUS && action == GLFW_PRESS) {
+			xSensitivity /= 2;
+			ySensitivity /= 2;
 		}
 	}
 
@@ -238,6 +259,36 @@ public:
 		
 	}
 
+	void mouseMovementCallback(GLFWwindow* window, double posX, double posY) {
+
+		if (firstMouse) {
+			mousePrevX = posX;
+			mousePrevY = posY;
+			firstMouse = false;
+		}
+		
+		//do stuff with current and previous values
+		deltaMouseX = posX - mousePrevX;
+		deltaMouseY = mousePrevY - posY;
+		xRot += xSensitivity * deltaMouseX;
+		yRot += ySensitivity * deltaMouseY;
+		//cap
+		if (yRot > glm::radians(80.0f)) yRot = glm::radians(80.0f);
+		if (yRot < -glm::radians(80.0f)) yRot = -glm::radians(80.0f);
+		//set the previous values
+		mousePrevX = posX;
+		mousePrevY = posY;
+
+		w = -normalize(vec3(cos(xRot) * cos(yRot), sin(yRot), sin(xRot) * cos(yRot)));
+
+	}
+
+	void scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
+	{
+
+	}
+
+
 	void resizeCallback(GLFWwindow *window, int width, int height)
 	{
 		glViewport(0, 0, width, height);
@@ -246,7 +297,8 @@ public:
 	void init(const std::string& resourceDirectory)
 	{
 		GLSL::checkVersion();
-
+		glfwSetInputMode(windowManager->getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		
 		//allows for translucent water
 		glEnable(GL_BLEND);
 		//use alpha for source color, 1-alpha for destination color
@@ -745,7 +797,7 @@ public:
 		Model->popMatrix();
 	}
 
-	void goalRender(std::shared_ptr<MatrixStack> Model) {
+	void goalRender(std::shared_ptr<MatrixStack> Model, std::shared_ptr<MatrixStack> Projection) {
 		Model->pushMatrix();
 		SetMaterial(prog, 5);
 		Model->loadIdentity();
@@ -753,6 +805,7 @@ public:
 		Model->scale(vec3(.72, .54, .6));
 		setModel(prog, Model);
 		goal->draw(prog);
+		
 		Model->popMatrix();
 	}
 
@@ -779,9 +832,9 @@ public:
 		Model->popMatrix();
 	}
 
-	void render() {
+	void render(float frametime) {
 		glTime = glfwGetTime();
-
+		
 		// Get current frame buffer size.
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
@@ -805,33 +858,35 @@ public:
 		// View is global translation along negative z for now
 		View->pushMatrix();
 		View->loadIdentity();
-		//for now the goal is centered on the origin, so cameraCenter is all 0, 
-		//but if you wanted to rotate around an arbitrary object, that's how you would do it
-		vec3 cameraCenter = shooterTrans;
-		int cameraDistance = fmax(3,3 - gZoom);
-		int cameraHeight = 1;
-		CameraPos = vec3(
-			//sin and cos to get camera moving on a circle cameraHeight units above x-z plane, with a radius of cameraDistance, centered on CameraCenter.
-			
-			cameraCenter.x + cameraDistance * (sin(gRot * pi<double>() / 4.0)),
-			cameraCenter.y + cameraHeight * (gTilt * pi<double>() / 4.0) + cameraHeight,
-			cameraCenter.z + cameraDistance * (cos(gRot * pi<double>() / 4.0)));
 		
-		//gives matrix of a view from arg1 to arg2
-			glm::mat4 CameraMatrix = glm::lookAt(CameraPos, cameraCenter, vec3(0, 1, 0));
-			View->multMatrix(CameraMatrix);
+		
+		vec3 target = normalize(vec3(
+			cos(xRot) * cos(yRot), //x
+			sin(yRot), //y
+			sin(xRot) * cos(yRot))); //z
+		vec3 up = vec3(0, 1, 0);
+		
+		mat4 lookAt = glm::lookAt(
+			eyePos, //eyepos
+			eyePos + target, 
+			up); //up
+		View->multMatrix(lookAt);
+		
 
 		// Draw the scene
 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
-		glUniform3f(prog->getUniform("viewPos"), cameraCenter.x, cameraCenter.y, cameraCenter.z);
+		glUniform3f(prog->getUniform("viewPos"), 0, 0, 0);
 		glUniform3f(prog->getUniform("lightPos"), -2.0f , 2.0f, 2.0f - lightTrans);
 
 		
 		
 		//goal
-		goalRender(Model);
+
+		goalRender(Model, Projection);
+		
+		
 		//goalie
 		goalieRender(Model);
 		//shooter
@@ -897,11 +952,26 @@ int main(int argc, char *argv[])
 	application->init(resourceDir);
 	application->initGeom(resourceDir);
 
+	auto lastTime = chrono::high_resolution_clock::now();
 	// Loop until the user closes the window.
 	while (! glfwWindowShouldClose(windowManager->getHandle()))
 	{
+		// save current time for next frame
+		auto nextLastTime = chrono::high_resolution_clock::now();
+
+		// get time since last frame
+		float deltaTime =
+			chrono::duration_cast<std::chrono::microseconds>(
+				chrono::high_resolution_clock::now() - nextLastTime)
+			.count();
+		// convert microseconds (weird) to seconds (less weird)
+		deltaTime *= 0.000001;
+
+		// reset lastTime so that we can calculate the deltaTime
+		// on the next frame
+		lastTime = nextLastTime;
 		// Render scene.
-		application->render();
+		application->render(deltaTime);
 
 		// Swap front and back buffers.
 		glfwSwapBuffers(windowManager->getHandle());

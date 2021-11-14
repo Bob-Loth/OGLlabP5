@@ -4,16 +4,22 @@ layout(location = 1) in vec3 vertNor;
 uniform mat4 P;
 uniform mat4 V;
 uniform mat4 M;
-uniform vec3 lightPos;
 
+uniform vec3 lightPos;
+uniform vec3 viewPos;
+
+//keep these and set them correctly
 out vec3 fragNor;
 out vec3 lightDir;
-out vec3 EPos;
+out vec3 fragPos;
+out vec3 viewFrag;
 
 void main()
 {
 	gl_Position = P * V * M * vertPos;
-	fragNor = (V*M * vec4(vertNor, 0.0)).xyz;
-	lightDir = vec3(V*(vec4(lightPos - (M*vertPos).xyz, 0.0)));
-	EPos = vec3(1); //PULLED for release
+	//update these as needed
+	fragNor = (M * vec4(vertNor, 0.0)).xyz; 
+	lightDir = lightPos - (M*vertPos).xyz;
+	viewFrag = viewPos;
+	fragPos = (M*vertPos).xyz;
 }
