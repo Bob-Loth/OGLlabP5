@@ -7,6 +7,7 @@ uniform mat4 M;
 uniform mat4 V;
 uniform vec3 lightPos;
 
+
 out vec3 fragNor;
 out vec3 lightDir;
 out vec3 EPos;
@@ -20,7 +21,7 @@ void main() {
 
   fragNor = (V*M * vec4(vertNor, 0.0)).xyz;
   lightDir = (V*(vec4(lightPos - wPos, 0.0))).xyz;
-  EPos = vec3(1); //PULLED for release
+  EPos = (V*M*vec4(vertPos, 0.0)).xyz; //PULLED for release
   
   /* pass through the texture coordinates to be interpolated */
   vTexCoord = vertTex;

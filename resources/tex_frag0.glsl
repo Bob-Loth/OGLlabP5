@@ -1,7 +1,7 @@
 #version 330 core
 
 uniform sampler2D Texture0;
-uniform float MatShine;
+//uniform float MatShine;
 
 uniform int flip;
 

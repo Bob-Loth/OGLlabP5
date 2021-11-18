@@ -29,6 +29,8 @@ Spline::~Spline()
 
 void Spline::update(float deltaTime)
 {
+    //
+
     // scale the deltatime by the duration
     // so that it works with the parameterized 
     // Bezier functions, which expext 0<=t<=1
@@ -41,9 +43,24 @@ void Spline::update(float deltaTime)
     }
 }
 
+void Spline::updateWithPolling(float deltaTime, Spline newPos) {
+    //preserve things like the current t and duration, but allow updates to a spline's curve-points mid-animation
+    this->start = newPos.start;
+    this->control1 = newPos.control1;
+    this->control2 = newPos.control2;
+    this->end = newPos.end;
+    this->update(deltaTime);
+}
+
 bool Spline::isDone()
 {
     return done;
+}
+
+void Spline::reset()
+{
+    t = 0;
+    done = false;
 }
 
 glm::vec3 Spline::getPosition()
