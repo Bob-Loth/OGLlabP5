@@ -140,7 +140,8 @@ public:
 	float gTilt = 0;
 	float gZoom = 0;
 	float gCamH = 0;
-	vec3 eyePos = vec3(0, 2, 0);
+	vec3 shooterTrans = vec3(0, .27, -7.3);
+	vec3 eyePos = shooterTrans + vec3(w.x, w.y + 1, w.z);
 	vec3 dEyePos = vec3(0, 2, 0);
 	vec3 w = vec3(0, 0, 0);
 	vec3 u = vec3(0, 0, 0);
@@ -150,7 +151,7 @@ public:
 	float movementSensitivity = 0.1;
 	vec3 goalTrans = vec3(0, 1.1, -9.5);
 	vec3 handPos = vec3(0, 0, 0);
-	vec3 shooterTrans = vec3(0, .27, -7.3);
+	
 	//animation data
 	float lightTrans = 0;
 	float gTrans = -3;
@@ -750,7 +751,7 @@ public:
 		Model->loadIdentity();
 		Model->translate(shooterTrans);
 		Model->rotate(pi<float>() / 2, vec3(-1, 0, 0));
-		Model->rotate(pi<float>() / 2, vec3(0, 0, 1));
+		Model->rotate(-xRot, vec3(0, 0, 1));
 		Model->scale(0.0050f);
 		//draw the lower body
 		setModel(prog, Model);
