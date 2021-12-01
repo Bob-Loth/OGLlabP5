@@ -1055,7 +1055,7 @@ public:
 			vec3 up = vec3(0, 1, 0);
 
 			mat4 lookAt = glm::lookAt(
-				eyePos, //eyepos
+				eyePos - target, //eyepos
 				eyePos + target,
 				up); //up
 			View->multMatrix(lookAt);
