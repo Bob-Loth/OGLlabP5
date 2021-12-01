@@ -199,19 +199,23 @@ public:
 
 	void processWASDInput() {
 		if (isWASDPressed[0]) {
-			eyePos -= movementSensitivity * w;
+			eyePos -= movementSensitivity * vec3(w.x, 0.0f, w.z);
+			shooterTrans -= movementSensitivity * vec3(w.x, 0.0f, w.z);
 			dEyePos = eyePos;
 		}
 		if (isWASDPressed[1]) {
-			eyePos += movementSensitivity * u;
+			eyePos += movementSensitivity * vec3(u.x, 0.0f, u.z);
+			shooterTrans += movementSensitivity * vec3(u.x, 0.0f, u.z);
 			dEyePos = eyePos;
 		}
 		if (isWASDPressed[2]) {
-			eyePos += movementSensitivity * w;
+			eyePos += movementSensitivity * vec3(w.x, 0.0f, w.z);
+			shooterTrans += movementSensitivity * vec3(w.x, 0.0f, w.z);
 			dEyePos = eyePos;
 		}
 		if (isWASDPressed[3]) {
-			eyePos -= movementSensitivity * u;
+			eyePos -= movementSensitivity * vec3(u.x, 0.0f, u.z);
+			shooterTrans -= movementSensitivity * vec3(u.x, 0.0f, u.z);
 			dEyePos = eyePos;
 		}
 	}
