@@ -113,6 +113,8 @@ void Shape::measure()
 	max.z = maxZ;
 }
 
+
+
 void Shape::init(bool textured)
 {
 	// Initialize the vertex array object

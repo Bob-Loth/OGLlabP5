@@ -163,11 +163,31 @@ public:
 	int numThrows = 0;
 	float goalieTime = 0;
 	float shooterRot = 0;
+	float shooterKickSpeed = 0;
 	bool goalieColor = true;
 	double glTime = 0;
 	//where the ball starts from on the z axis
 	float currX = 0.0f, currY = 0.0f, currZ = 0.0f;
 	float z0 = 9.0;
+
+	
+	//ball and water physics data
+		//forces
+	float forceMult = 0.0001;
+	vec3 g = vec3(0.0f, -1.98f, 0.0f);
+	vec3 buoyancy = vec3(0, 5.5f, 0.0f);
+		//ball's position, and velocity constants
+	vec3 initialBallPos = handPos;
+	vec3 ballPos = handPos;
+	bool firstShotRender = false;
+	vec3 ballV;
+	float vFast = 4.0f;
+	float vSlow = 1.0f;
+	bool ballActive = false;
+	bool lobbed = false;
+	double ballStart = 0.0;
+	vec3 ballW;
+
 	vec3 CameraPos;
 	bool isWASDPressed[4] = { false, false, false, false };
 	vec3 getCenterOfBBox(Shape s) {
@@ -238,6 +258,64 @@ public:
 			shooterTrans.z = poolBox.min.z * 12 - 4;
 		}
 		eyePos = shooterTrans + vec3(w.x, w.y + 1, w.z);
+
+		//if ball has moved past max or min of poolBox, not counting the extra space allowed to make a goal.
+		if (ballPos.x >= poolBox.max.x * 12 - 0.3) {
+			ballV = 0.7f * vec3(-ballV.x, ballV.y, ballV.z);
+		}
+		if (ballPos.x <= poolBox.min.x * 12 + 0.3) {
+			ballV = 0.7f * vec3(-ballV.x, ballV.y, ballV.z);
+		}
+
+		if (ballPos.y <= poolBox.max.y * 12 + 0.75) {
+			ballV = 0.1f * ballV;
+		}
+		
+		if (ballPos.z >= poolBox.max.z * 12 - 9.5) {
+			ballV = 0.7f * vec3(ballV.x, ballV.y, -ballV.z);
+		}
+		if (ballPos.z <= poolBox.min.z * 12 - 6) {
+			ballV = 0.7f * vec3(ballV.x, ballV.y, -ballV.z);
+		}
+	}
+
+	void ballPhysics(bool lobbed) {
+		if (lobbed) {
+			//throw the ball with a slower velocity, at a higher angle.
+			
+		}
+		else {
+
+			//throw the ball with high velocity, at a lower angle.
+			
+		}
+		ballV += forceMult * g;
+		if (ballPos.y < shooterTrans.y + 0.6) {
+			ballV += forceMult * buoyancy * (ballPos.y + 0.6f);
+			ballV.x = 0.95 * ballV.x;
+			ballV.z = 0.95 * ballV.z;
+		}
+		ballPos += ballV;
+	}
+
+	void drawBallPhysics(shared_ptr<MatrixStack> Model) {
+		texProg->bind();
+		
+		texture1->bind(texProg->getUniform("Texture0"));
+		glUniform1i(texProg->getUniform("flip"), 1);
+
+		Model->pushMatrix();
+		
+		if (firstShotRender) {
+			ballPos = vec3(rHandAnchor->topMatrix()[3][0], rHandAnchor->topMatrix()[3][1], rHandAnchor->topMatrix()[3][2]);
+			firstShotRender = false;
+		}
+		Model->translate(ballPos);
+		Model->scale(0.08f);
+		setModel(texProg, Model);
+		ball->draw(texProg);
+		
+		texProg->unbind();
 	}
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -335,12 +413,27 @@ public:
 	{
 		double posX, posY;
 
-		if (action == GLFW_PRESS)
+		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 		{
-			 glfwGetCursorPos(window, &posX, &posY);
-			 cout << "Pos X " << posX <<  " Pos Y " << posY << endl;
+			lobbed = false;
+			
 		}
+		if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+		{
+			lobbed = true;
+		}
+		ballPos = vec3(rHandAnchor->topMatrix()[3][0], rHandAnchor->topMatrix()[3][1], rHandAnchor->topMatrix()[3][2]);
 		
+		firstShotRender = true;
+		ballActive = true;
+		if (lobbed) {
+			ballV = forceMult * 300 * -vec3(w.x, w.y - 1, w.z);
+		}
+		else {
+			ballV = forceMult * 300 * -vec3(w.x, w.y - 0.5, w.z);
+		}
+		ballStart = glfwGetTime();
+
 	}
 
 	void mouseMovementCallback(GLFWwindow* window, double posX, double posY) {
@@ -761,6 +854,33 @@ public:
 		u = cross(w, vec3(0, 1, 0));
 	}
 
+	void shooterLegRender(shared_ptr<MatrixStack> Model, bool isRight) {
+		int offset = 0;
+		int flip = 1;
+		if (!isRight) {
+			offset = 6;
+			flip = -flip;
+		}
+
+		Model->pushMatrix();
+			vec3 pivotRPelvis = getCenterOfBBox(dummy->at(5 + offset));
+			Model->translate(pivotRPelvis);
+			Model->rotate(flip * 0.5 * shooterKickSpeed, vec3(0, 1, 0));
+			Model->translate(-pivotRPelvis);
+			setModel(prog, Model);
+			dummy->at(4 + offset).draw(prog);
+			dummy->at(5 + offset).draw(prog);
+			Model->pushMatrix();
+				vec3 pivotRKnee = getCenterOfBBox(dummy->at(3 + offset));
+				Model->translate(pivotRKnee);
+				Model->rotate(flip * 0.25 * shooterKickSpeed + pi<float>() / 8, vec3(0, 1, 0));
+				Model->translate(-pivotRKnee);
+				setModel(prog, Model);
+				dummy->at(2 + offset).draw(prog);
+				dummy->at(3 + offset).draw(prog);
+			Model->popMatrix();
+		Model->popMatrix();
+	}
 	void shooterRender(std::shared_ptr<MatrixStack> Model) {
 		Model->pushMatrix();
 		glUniform3f(prog->getUniform("MatAmb"), 0.065f, 0.020f, 0.020f);
@@ -774,9 +894,20 @@ public:
 		Model->scale(0.0050f);
 		//draw the lower body
 		setModel(prog, Model);
-		for (size_t i = 0; i < 14; i++) {
+		//draw hips and belly
+		for (size_t i = 12; i < 14; i++) {
 			dummy->at(i).draw(prog);
 		}
+		//draw right leg
+		
+		
+		shooterLegRender(Model, true);
+		
+		//draw left leg
+		
+		shooterLegRender(Model, false);
+		
+		
 		//draw the upper body
 			Model->pushMatrix();
 				vec3 pivotBelly = getCenterOfBBox(dummy->at(13));
@@ -1045,6 +1176,7 @@ public:
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
 		glViewport(0, 0, width, height);
 
+
 		// Clear framebuffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1117,10 +1249,21 @@ public:
 		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
 		glUniform3f(texProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
 		glUniform1f(texProg->getUniform("alpha"), 1.0f);
-		ballRender(Model);
+		if (ballActive) {
+			ballPhysics(lobbed);
+			drawBallPhysics(Model);
+			if (ballStart + 3.0 < glfwGetTime()) {
+				ballActive = false;
+			}
+		}
+		else {
+			ballRender(Model);
+		}
+
+		
 		skyBoxRender(Model);
 		drawGround(texProg);
-
+		
 		
 
 		texProg->unbind();
@@ -1131,6 +1274,7 @@ public:
 		hTheta = std::max(0.0f, (float)cos(glfwGetTime()));
 		//how fast the goalie does his animation, controlled by animSpeed.
 		shooterRot = cos(pi<double>() * glTime);
+		shooterKickSpeed = cos(2 * pi<double>() * glTime);
 		goalieTime = cos(2 * pi<double>() * glTime / animSpeed);
 		// Pop matrix stacks.
 		Projection->popMatrix();
