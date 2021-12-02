@@ -148,7 +148,7 @@ public:
 	
 	bool firstHandRender = true;
 	bool firstMouse = true;
-	float movementSensitivity = 0.1;
+	float movementSensitivity = 0.025;
 	vec3 goalTrans = vec3(0, 1.1, -9.5);
 	vec3 handPos = vec3(0, 0, 0);
 	
@@ -219,6 +219,25 @@ public:
 			shooterTrans -= movementSensitivity * vec3(u.x, 0.0f, u.z);
 			dEyePos = eyePos;
 		}
+	}
+
+	void checkCollisions() {
+		Shape poolBox = pool->at(1);
+		//if shooter has moved past max or min x of poolBox
+		if (shooterTrans.x >= poolBox.max.x * 12 - 0.3) {
+			shooterTrans.x = poolBox.max.x * 12 - 0.3;
+		}
+		if (shooterTrans.x <= poolBox.min.x * 12 + 0.3) {
+			shooterTrans.x = poolBox.min.x * 12 + 0.3;
+		}
+		//if shooter has moved past max or min y of poolBox
+		if (shooterTrans.z >= poolBox.max.z * 12 - 9.5) {
+			shooterTrans.z = poolBox.max.z * 12 - 9.5;
+		}
+		if (shooterTrans.z <= poolBox.min.z * 12 - 4) {
+			shooterTrans.z = poolBox.min.z * 12 - 4;
+		}
+		eyePos = shooterTrans + vec3(w.x, w.y + 1, w.z);
 	}
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -1020,6 +1039,7 @@ public:
 	void render(float frametime) {
 		glTime = glfwGetTime();
 		processWASDInput();
+		checkCollisions();
 		// Get current frame buffer size.
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
