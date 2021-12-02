@@ -878,6 +878,15 @@ public:
 				setModel(prog, Model);
 				dummy->at(2 + offset).draw(prog);
 				dummy->at(3 + offset).draw(prog);
+				Model->pushMatrix();
+					vec3 pivotRAnkle = getCenterOfBBox(dummy->at(1 + offset));
+					Model->translate(pivotRAnkle);
+					Model->rotate(pi<float>() / 3, vec3(0, 1, 0));
+					Model->translate(-pivotRAnkle);
+					setModel(prog, Model);
+					dummy->at(0 + offset).draw(prog);
+					dummy->at(1 + offset).draw(prog);
+				Model->popMatrix();
 			Model->popMatrix();
 		Model->popMatrix();
 	}
