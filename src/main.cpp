@@ -175,7 +175,7 @@ public:
 		//forces
 	float forceMult = 0.0001;
 	vec3 g = vec3(0.0f, -1.98f, 0.0f);
-	vec3 buoyancy = vec3(0, 5.5f, 0.0f);
+	vec3 buoyancy = vec3(0, 1.98f, 0.0f);
 		//ball's position, and velocity constants
 	vec3 initialBallPos = handPos;
 	vec3 ballPos = handPos;
@@ -261,20 +261,25 @@ public:
 
 		//if ball has moved past max or min of poolBox, not counting the extra space allowed to make a goal.
 		if (ballPos.x >= poolBox.max.x * 12 - 0.3) {
+			ballPos.x -= 0.025;
 			ballV = 0.7f * vec3(-ballV.x, ballV.y, ballV.z);
 		}
 		if (ballPos.x <= poolBox.min.x * 12 + 0.3) {
+			ballPos.x += 0.025;
 			ballV = 0.7f * vec3(-ballV.x, ballV.y, ballV.z);
 		}
 
 		if (ballPos.y <= poolBox.max.y * 12 + 0.75) {
+			ballPos.y += 0.025;
 			ballV = 0.1f * ballV;
 		}
 		
 		if (ballPos.z >= poolBox.max.z * 12 - 9.5) {
+			ballPos.z -= 0.025;
 			ballV = 0.7f * vec3(ballV.x, ballV.y, -ballV.z);
 		}
 		if (ballPos.z <= poolBox.min.z * 12 - 6) {
+			ballPos.z +=  0.025;
 			ballV = 0.7f * vec3(ballV.x, ballV.y, -ballV.z);
 		}
 	}
@@ -290,9 +295,14 @@ public:
 			
 		}
 		ballV += forceMult * g;
-		if (ballPos.y < shooterTrans.y + 0.6) {
-			ballV += forceMult * buoyancy * (ballPos.y + 0.6f);
+		float depth = ((shooterTrans.y + 0.6) - ballPos.y);
+		if (depth > 0.0) {
+			
+			ballV += forceMult * (buoyancy * (1.0f +  0.6f * depth));
 			ballV.x = 0.95 * ballV.x;
+			if (ballPos.y - (shooterTrans.y + 0.6f) < 0.05 && ballV.y < 0) {
+				ballV.y = 0.975 * ballV.y;
+			}
 			ballV.z = 0.95 * ballV.z;
 		}
 		ballPos += ballV;
@@ -422,18 +432,20 @@ public:
 		{
 			lobbed = true;
 		}
-		ballPos = vec3(rHandAnchor->topMatrix()[3][0], rHandAnchor->topMatrix()[3][1], rHandAnchor->topMatrix()[3][2]);
-		
-		firstShotRender = true;
-		ballActive = true;
-		if (lobbed) {
-			ballV = forceMult * 300 * -vec3(w.x, w.y - 1, w.z);
-		}
-		else {
-			ballV = forceMult * 300 * -vec3(w.x, w.y - 0.5, w.z);
-		}
-		ballStart = glfwGetTime();
 
+		if (action == GLFW_PRESS) {
+			ballPos = vec3(rHandAnchor->topMatrix()[3][0], rHandAnchor->topMatrix()[3][1], rHandAnchor->topMatrix()[3][2]);
+
+			firstShotRender = true;
+			ballActive = true;
+			if (lobbed) {
+				ballV = forceMult * 300 * -vec3(w.x, w.y - 1, w.z);
+			}
+			else {
+				ballV = forceMult * 300 * -vec3(w.x, w.y - 0.5, w.z);
+			}
+			ballStart = glfwGetTime();
+		}
 	}
 
 	void mouseMovementCallback(GLFWwindow* window, double posX, double posY) {
@@ -1261,7 +1273,7 @@ public:
 		if (ballActive) {
 			ballPhysics(lobbed);
 			drawBallPhysics(Model);
-			if (ballStart + 3.0 < glfwGetTime()) {
+			if (ballStart + 10.0 < glfwGetTime()) {
 				ballActive = false;
 			}
 		}
