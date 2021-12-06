@@ -34,7 +34,7 @@ void particleSys::gpuSetup() {
 		pointColors[i * 3 + 0] = particles.at(i)->getColor().r;
 		pointColors[i * 3 + 1] = particles.at(i)->getColor().g;
 		pointColors[i * 3 + 2] = particles.at(i)->getColor().b;
-		cout << "red" << pointColors[i * 3 + 0] << endl;
+		
 	}
 
 	//generate the VAO
@@ -77,23 +77,23 @@ void particleSys::drawMe(std::shared_ptr<Program> prog) {
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * numP * 3, pointColors);
 
 
- 	
+	
 	int h_pos = prog->getAttribute("vertPos");
 	
   GLSL::enableVertexAttribArray(h_pos);
-  std::cout << "Any Gl errors1: " << glGetError() << std::endl;
+  //std::cout << "Any Gl errors1: " << glGetError() << std::endl;
   glBindBuffer(GL_ARRAY_BUFFER, vertBuffObj);
   
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat), (GLvoid*)0);
 	glVertexAttribDivisor(0, 1);
-  glVertexAttribDivisor(1, 1);
+	glVertexAttribDivisor(1, 1);
 
   // Draw the points !
   glDrawArraysInstanced(GL_POINTS, 0, 1, numP);
 
-  glVertexAttribDivisor(0, 0);
-  glVertexAttribDivisor(1, 0);	
-  std::cout << "Any Gl errors2: " << glGetError() << std::endl;
+	glVertexAttribDivisor(0, 0);
+	glVertexAttribDivisor(1, 1);	
+  //std::cout << "Any Gl errors2: " << glGetError() << std::endl;
 	glDisableVertexAttribArray(0);
 }
 
@@ -125,9 +125,7 @@ void particleSys::update() {
         col = particles[i]->getColor();
         points[i*3+0] =pos.x; 
         points[i*3+1] =pos.y; 
-        points[i*3+2] =pos.z; 
-		
-			
+        points[i*3+2] =pos.z;
   } 
 
   //update the GPU data

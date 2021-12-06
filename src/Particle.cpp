@@ -21,14 +21,14 @@ Particle::Particle(vec3 start) :
 	charge(1.0f),
 	m(1.0f),
 	d(0.0f),
-	x(start.x + randFloat(-90.0f, 90.0f), start.y, start.z + randFloat(-90.0f, 90.0f)),
-	v(0.0f, -100.0f, 0.0f),
+	x(start.x, start.y, start.z),
+	v(0.0f, 0.0f, 0.0f),
 	lifespan(2.0f),
 	tEnd(0.0f),
-	scale(1.0f),
-	color(.8f * (((rand() % 8) + 2) / 5),
+	scale(10.0f),
+	color(.245f * (((rand() % 8) + 2) / 5),
 		.245f * (((rand() % 8) + 2) / 5),
-		.066f * (((rand() % 8) + 2) / 5),
+		.666f * (((rand() % 8) + 2) / 5),
 		1.0f)
 {
 }
@@ -49,16 +49,16 @@ void Particle::rebirth(float t, vec3 start)
 	charge = randFloat(0.0f, 1.0f) < 0.5 ? -1.0f : 1.0f;	
 	m = 1.0f;
   	d = randFloat(0.0f, 0.02f);
-	x = vec3(start.x + randFloat(-2.0f, 2.0f) + 2, start.y - 0.5, start.z + randFloat(-2.0f, 2.0f));
+	x = vec3(start.x + randFloat(-2.0f, 2.0f) + 2, start.y, start.z + randFloat(-2.0f, 2.0f));
 	v.x = randFloat(-0.3f, 0.3f);
 	v.y = randFloat(-0.5f, -0.3f);
 	v.z = randFloat(-0.3f, 0.27f);
 	lifespan = randFloat(1.0f, 4.0f); 
 	tEnd = t + lifespan;
-	scale = randFloat(0.2, 1.0f);
-   	color.r = randFloat(0.6f, 0.9f);
+	scale = randFloat(1.0f, 1.0f);
+   	color.r = randFloat(0.26f, 0.29f);
    	color.g = randFloat(0.14f, 0.34f);
-   	color.b = randFloat(0.03f, 0.09f);
+   	color.b = randFloat(0.63f, 0.69f);
 	color.a = 1.0f;
 }
 

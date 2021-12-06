@@ -16,7 +16,7 @@
 #include "Texture.h"
 #include "Spline.h"
 #include "Bezier.h"
-
+#include "particleSys.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader/tiny_obj_loader.h>
@@ -106,6 +106,11 @@ public:
 	//Our shader program for textures
 	std::shared_ptr<Program> texProg;
 
+	//particle system
+	shared_ptr<Program> partProg;
+	particleSys *splash;
+
+
 	//our geometry
 	shared_ptr<Shape> goal;
 	shared_ptr<vector<Shape>> pool = make_shared<vector<Shape>>();
@@ -127,6 +132,8 @@ public:
 	shared_ptr<Texture> texture1;
 	//skybox
 	shared_ptr<Texture> texture2;
+	//water splash
+	shared_ptr<Texture> texture3;
 
 	//spline/bezier camera data
 	bool goCamera = false;
@@ -181,6 +188,7 @@ public:
 	vec3 ballPos = handPos;
 	bool firstShotRender = false;
 	vec3 ballV;
+	float ballRot;
 	float vFast = 4.0f;
 	float vSlow = 1.0f;
 	bool ballActive = false;
@@ -285,27 +293,34 @@ public:
 	}
 
 	void ballPhysics(bool lobbed) {
-		if (lobbed) {
-			//throw the ball with a slower velocity, at a higher angle.
-			
-		}
-		else {
+		
+		
 
 			//throw the ball with high velocity, at a lower angle.
-			
-		}
-		ballV += forceMult * g;
-		float depth = ((shooterTrans.y + 0.6) - ballPos.y);
-		if (depth > 0.0) {
-			
-			ballV += forceMult * (buoyancy * (1.0f +  0.6f * depth));
-			ballV.x = 0.95 * ballV.x;
-			if (ballPos.y - (shooterTrans.y + 0.6f) < 0.05 && ballV.y < 0) {
-				ballV.y = 0.975 * ballV.y;
+			ballV += forceMult * g;
+			float depth = ((shooterTrans.y + 0.6) - ballPos.y);
+			if (depth > 0.0) {
+
+				ballV += forceMult * (buoyancy * (1.0f + 0.6f * depth));
+				ballV.x = 0.975 * ballV.x;
+				if (ballPos.y - (shooterTrans.y + 0.6f) < 0.05 && ballV.y < 0) {
+					
+					if (length(vec3(ballV.x, 0.0f, ballV.z)) > 0.04) {
+						cout << length(vec3(ballV.x, 0.0f, ballV.z)) << " > " << 0.04 << endl;
+						ballV.y = -ballV.y;
+						ballV.x *= 0.925;
+						ballV.z *= 0.925;
+						ballPos.y += 0.005;
+					}
+					else {
+						ballV.y = 0.975 * ballV.y;
+					}
+				}
+				ballV.z = 0.975 * ballV.z;
 			}
-			ballV.z = 0.95 * ballV.z;
-		}
-		ballPos += ballV;
+			ballPos += ballV;
+		
+		
 	}
 
 	void drawBallPhysics(shared_ptr<MatrixStack> Model) {
@@ -322,6 +337,8 @@ public:
 		}
 		Model->translate(ballPos);
 		Model->scale(0.08f);
+		ballRot += 2*length(ballV);
+		Model->rotate(ballRot, cross(vec3(0, 1, 0), ballV));
 		setModel(texProg, Model);
 		ball->draw(texProg);
 		
@@ -442,7 +459,7 @@ public:
 				ballV = forceMult * 300 * -vec3(w.x, w.y - 1, w.z);
 			}
 			else {
-				ballV = forceMult * 300 * -vec3(w.x, w.y - 0.5, w.z);
+				ballV = forceMult * 500 * -vec3(w.x, w.y - 0.5, w.z);
 			}
 			ballStart = glfwGetTime();
 		}
@@ -499,11 +516,15 @@ public:
 		// Set background color.
 		glClearColor(.72f, .84f, 1.06f, 1.0f);
 		// Enable z-buffer test.
-		glEnable(GL_DEPTH_TEST);
+		CHECKED_GL_CALL(glEnable(GL_DEPTH_TEST));
+		CHECKED_GL_CALL(glEnable(GL_BLEND));
+		CHECKED_GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+		CHECKED_GL_CALL(glPointSize(24.0f));
+
 
 		// Initialize the GLSL program that we will use for local shading
 		prog = make_shared<Program>();
-		prog->setVerbose(true);
+		prog->setVerbose(false);
 		prog->setShaderNames(resourceDirectory + "/simple_vert.glsl", resourceDirectory + "/simple_frag.glsl");
 		prog->init();
 		prog->addUniform("P");
@@ -520,7 +541,7 @@ public:
 
 		// Initialize the GLSL program that we will use for texture mapping
 		texProg = make_shared<Program>();
-		texProg->setVerbose(true);
+		texProg->setVerbose(false);
 		texProg->setShaderNames(resourceDirectory + "/tex_vert_old.glsl", resourceDirectory + "/tex_frag0_old.glsl");
 		texProg->init();
 		texProg->addUniform("P");
@@ -534,6 +555,24 @@ public:
 		texProg->addAttribute("vertNor");
 		texProg->addAttribute("vertTex");
 
+		// Initialize particle shader
+		partProg = make_shared<Program>();
+		partProg->setVerbose(false);
+		partProg->setShaderNames(
+			resourceDirectory + "/lab10_vert.glsl",
+			resourceDirectory + "/lab10_frag.glsl");
+		partProg->init();
+		partProg->addUniform("P");
+		partProg->addUniform("M");
+		partProg->addUniform("V");
+		partProg->addUniform("alphaTexture");
+		partProg->addAttribute("vertPos");
+		partProg->addAttribute("pColor");
+		if (!partProg->init())
+		{
+			std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+			exit(1);
+		}
 		//read in and load the texture
 		texture0 = make_shared<Texture>();
   		texture0->setFilename(resourceDirectory + "/water.jpg");
@@ -554,6 +593,16 @@ public:
 		texture2->init();
 		texture2->setUnit(2);
 		texture2->setWrapModes(GL_REPEAT, GL_REPEAT);
+
+		//water splash particle texture
+		texture3 = make_shared<Texture>();
+		texture3->setFilename(resourceDirectory + "/alpha.bmp");
+		texture3->init();
+		texture3->setUnit(3);
+		texture3->setWrapModes(GL_REPEAT, GL_REPEAT);
+
+		splash = new particleSys(vec3(0, 0, 0));
+		splash->gpuSetup();
 
 		//spline paths
 		splinepath[0] = Spline(eyePos, 
@@ -800,6 +849,14 @@ public:
   		}
 	}
 
+	void initTex(const std::string& resourceDirectory)
+	{
+		texture3 = make_shared<Texture>();
+		texture3->setFilename(resourceDirectory + "/alpha.bmp");
+		texture3->init();
+		texture3->setUnit(3);
+		texture3->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+	}
 	/* helper function to set model trasnforms */
   	void SetModel(vec3 trans, float rotY, float rotX, float sc, shared_ptr<Program> curS) {
   		mat4 Trans = glm::translate( glm::mat4(1.0f), trans);
@@ -1197,7 +1254,7 @@ public:
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
 		glViewport(0, 0, width, height);
 
-
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		// Clear framebuffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1215,7 +1272,7 @@ public:
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.01f, 100.0f);
 
-		// View is global translation along negative z for now
+		// View is behind shooter
 		View->pushMatrix();
 		if (!goCamera) {
 			View->loadIdentity();
@@ -1241,6 +1298,10 @@ public:
 				vec3(0, 2, -1), 3);
 
 		}
+
+		//set particle system camera
+		splash->setCamera(View->topMatrix());
+
 
 		// Draw the scene
 		prog->bind();
@@ -1289,6 +1350,23 @@ public:
 
 		texProg->unbind();
 		
+		//draw particles
+		partProg->bind();
+		texture3->bind(partProg->getUniform("alphaTexture"));
+		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix())));
+		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix())));
+		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix())));
+
+		Model->pushMatrix();
+		Model->loadIdentity();
+		Model->translate(vec3(0, 0, -1));
+		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix())));
+		splash->drawMe(partProg);
+		splash->update();
+
+		Model->popMatrix();
+		partProg->unbind();
+
 		//animation update example
 		sTheta = sin((float)glfwGetTime());
 		eTheta = std::max(0.0f, (float)sin(glfwGetTime()));
@@ -1306,6 +1384,7 @@ public:
 
 int main(int argc, char *argv[])
 {
+	srand(time(0));
 	// Where the resources are loaded from
 	std::string resourceDir = "../resources";
 
@@ -1329,7 +1408,7 @@ int main(int argc, char *argv[])
 
 	application->init(resourceDir);
 	application->initGeom(resourceDir);
-
+	application->initTex(resourceDir);
 	auto lastTime = chrono::high_resolution_clock::now();
 	// Loop until the user closes the window.
 	while (! glfwWindowShouldClose(windowManager->getHandle()))
