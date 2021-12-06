@@ -113,7 +113,8 @@ public:
 	shared_ptr<Program> partProg;
 	vector<particleSys *> splashes;
 
-
+	//wave shader
+	shared_ptr<Program> waveProg;
 	//our geometry
 	shared_ptr<Shape> goal;
 	shared_ptr<vector<Shape>> pool = make_shared<vector<Shape>>();
@@ -575,6 +576,22 @@ public:
 		texProg->addAttribute("vertPos");
 		texProg->addAttribute("vertNor");
 		texProg->addAttribute("vertTex");
+
+		//initialize experimental wave shader
+		waveProg = make_shared<Program>();
+		waveProg->setVerbose(false);
+		waveProg->setShaderNames(resourceDirectory + "/wavetex.glsl", resourceDirectory + "/wavefrag.glsl");
+		waveProg->init();
+		waveProg->addUniform("P");
+		waveProg->addUniform("V");
+		waveProg->addUniform("M");
+		waveProg->addUniform("Texture0");
+		waveProg->addUniform("alpha");
+		waveProg->addUniform("lightPos");
+		waveProg->addUniform("flip");
+		waveProg->addAttribute("vertPos");
+		waveProg->addAttribute("vertNor");
+		waveProg->addAttribute("vertTex");
 
 		// Initialize particle shader
 		partProg = make_shared<Program>();
