@@ -681,7 +681,7 @@ public:
 		vector<tinyobj::shape_t> TOshapesWater;
 		vector<tinyobj::material_t> objMaterialsWater;
 
-		// Initialize bunny mesh.
+		// Initialize ball mesh.
 		vector<tinyobj::shape_t> TOshapesB;
  		vector<tinyobj::material_t> objMaterialsB;
 		//load in the mesh and make the shape(s)
@@ -1304,6 +1304,23 @@ public:
 		Model->popMatrix();
 	}
 
+	void drawWater(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> View, shared_ptr<MatrixStack> Projection){
+		texProg->bind();
+		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
+		glUniform3f(texProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
+		glUniform1f(texProg->getUniform("alpha"), 0.5f);
+		texture0->bind(texProg->getUniform("Texture0"));
+		glUniform1i(texProg->getUniform("flip"), 1);
+		Model->pushMatrix();
+		Model->loadIdentity();
+		Model->translate(vec3(0.0f,0.85f,-4.0f));
+		Model->scale(vec3(3.0f, 1.0f, 8.0f));
+		setModel(texProg, Model);
+		water->draw(texProg);
+		Model->popMatrix();
+		texProg->unbind();
+	}
 	void drawSplash(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> View, shared_ptr<MatrixStack> Projection) {
 		//draw particles
 		//set particle system camera
@@ -1413,6 +1430,8 @@ public:
 		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
 		glUniform3f(texProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
 		glUniform1f(texProg->getUniform("alpha"), 1.0f);
+		texture2->bind(texProg->getUniform("Texture0"));
+		glUniform1i(texProg->getUniform("flip"), 1);
 		if (ballActive) {
 			ballPhysics();
 			drawBallPhysics(Model);
@@ -1423,10 +1442,11 @@ public:
 		else {
 			ballRender(Model);
 		}
-		water->draw(texProg);
+		texProg->unbind();
+		drawWater(Model, View, Projection);
 		
 		skyBoxRender(Model);
-		drawGround(texProg);
+		//drawGround(texProg);
 		
 		
 
@@ -1466,7 +1486,7 @@ int main(int argc, char *argv[])
 	// and GL context, etc.
 
 	WindowManager *windowManager = new WindowManager();
-	windowManager->init(640, 480);
+	windowManager->init(1920, 1080);
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
 
