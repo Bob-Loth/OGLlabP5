@@ -51,9 +51,13 @@ void Particle::rebirth(float t, vec3 start, vec3 ballV)
 	m = 1.0f;
   	d = randFloat(0.0f, 0.02f);
 	x = vec3(start.x, start.y, start.z);
-	v.x = randFloat(0.0f, 1.0f) * ballV.x * vMult;
+	v.x = randFloat(0.2f, 1.0f) * ballV.x * vMult;
 	v.y = randFloat(0.5f, 1.5f) * -ballV.y * vMult;
-	v.z = randFloat(0.0f, 1.0f)* ballV.z * vMult; 
+	v.z = randFloat(0.2f, 1.0f)* ballV.z * vMult;
+	vec3 rotVec = vec3(ballV.x, -ballV.y, ballV.z);
+	mat4 rotMat(1);
+	rotMat = rotate(rotMat, radians(randFloat(-80.0f, 80.0f)), vec3(0, 1, 0));
+	v = vec3(rotMat * vec4(v, 1.0f));
 	lifespan = 5.0f; 
 	tEnd = t + lifespan;
 	scale = randFloat(1.0f, 1.0f);
