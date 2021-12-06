@@ -10,7 +10,7 @@ using namespace std;
 
 particleSys::particleSys(vec3 source) {
 
-	numP = 30;	
+	numP = 300;	
 	t = 0.0f;
 	h = 0.01f;
 	g = vec3(0.0f, -0.098, 0.0f);

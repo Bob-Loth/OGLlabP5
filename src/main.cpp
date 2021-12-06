@@ -540,7 +540,7 @@ public:
 		CHECKED_GL_CALL(glEnable(GL_DEPTH_TEST));
 		CHECKED_GL_CALL(glEnable(GL_BLEND));
 		CHECKED_GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-		CHECKED_GL_CALL(glPointSize(4.0f));
+		CHECKED_GL_CALL(glPointSize(14.0f));
 
 
 		// Initialize the GLSL program that we will use for local shading
@@ -1406,7 +1406,7 @@ public:
 		else {
 			ballRender(Model);
 		}
-
+		water->draw(texProg);
 		
 		skyBoxRender(Model);
 		drawGround(texProg);

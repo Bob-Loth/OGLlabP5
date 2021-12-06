@@ -36,8 +36,8 @@ private:
 	ParticleSorter sorter;
 
 	//this is not great that this is hard coded - you can make it better
-	GLfloat points[90];
-	float pointColors[90];
+	GLfloat points[900];
+	float pointColors[900];
 	
 
 	mat4 theCamera;

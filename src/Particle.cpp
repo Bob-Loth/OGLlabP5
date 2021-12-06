@@ -51,15 +51,16 @@ void Particle::rebirth(float t, vec3 start, vec3 ballV)
 	m = 1.0f;
   	d = randFloat(0.0f, 0.02f);
 	x = vec3(start.x, start.y, start.z);
-	v.x = randFloat(-0.0f, 1.0f) * ballV.x * vMult;
+	v.x = randFloat(0.0f, 1.0f) * ballV.x * vMult;
 	v.y = randFloat(0.5f, 1.5f) * -ballV.y * vMult;
-	v.z = randFloat(-0.0f, 1.0f)* ballV.z * vMult; 
+	v.z = randFloat(0.0f, 1.0f)* ballV.z * vMult; 
 	lifespan = 5.0f; 
 	tEnd = t + lifespan;
 	scale = randFloat(1.0f, 1.0f);
-   	color.r = randFloat(0.26f, 0.29f);
-   	color.g = randFloat(0.14f, 0.34f);
-   	color.b = randFloat(0.63f, 0.69f);
+	float whiteVal = randFloat(0.20f, 0.80f);
+   	color.r = whiteVal;
+   	color.g = whiteVal;
+   	color.b = randFloat(0.93f, 0.99f);
 	color.a = randFloat(0.3f, 1.0f);
 }
 
