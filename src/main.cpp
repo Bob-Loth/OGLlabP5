@@ -32,64 +32,64 @@ using namespace std;
 using namespace glm;
 
 void resize_obj(std::vector<tinyobj::shape_t>& shapes) {
-	float minX, minY, minZ;
-	float maxX, maxY, maxZ;
-	float scaleX, scaleY, scaleZ;
-	float shiftX, shiftY, shiftZ;
-	float epsilon = 0.001f;
+    float minX, minY, minZ;
+    float maxX, maxY, maxZ;
+    float scaleX, scaleY, scaleZ;
+    float shiftX, shiftY, shiftZ;
+    float epsilon = 0.001f;
 
-	minX = minY = minZ = 1.1754E+38F;
-	maxX = maxY = maxZ = -1.1754E+38F;
+    minX = minY = minZ = 1.1754E+38F;
+    maxX = maxY = maxZ = -1.1754E+38F;
 
-	//Go through all vertices to determine min and max of each dimension
-	for (size_t i = 0; i < shapes.size(); i++) {
-		for (size_t v = 0; v < shapes[i].mesh.positions.size() / 3; v++) {
-			if (shapes[i].mesh.positions[3 * v + 0] < minX) minX = shapes[i].mesh.positions[3 * v + 0];
-			if (shapes[i].mesh.positions[3 * v + 0] > maxX) maxX = shapes[i].mesh.positions[3 * v + 0];
+    //Go through all vertices to determine min and max of each dimension
+    for (size_t i = 0; i < shapes.size(); i++) {
+        for (size_t v = 0; v < shapes[i].mesh.positions.size() / 3; v++) {
+            if (shapes[i].mesh.positions[3 * v + 0] < minX) minX = shapes[i].mesh.positions[3 * v + 0];
+            if (shapes[i].mesh.positions[3 * v + 0] > maxX) maxX = shapes[i].mesh.positions[3 * v + 0];
 
-			if (shapes[i].mesh.positions[3 * v + 1] < minY) minY = shapes[i].mesh.positions[3 * v + 1];
-			if (shapes[i].mesh.positions[3 * v + 1] > maxY) maxY = shapes[i].mesh.positions[3 * v + 1];
+            if (shapes[i].mesh.positions[3 * v + 1] < minY) minY = shapes[i].mesh.positions[3 * v + 1];
+            if (shapes[i].mesh.positions[3 * v + 1] > maxY) maxY = shapes[i].mesh.positions[3 * v + 1];
 
-			if (shapes[i].mesh.positions[3 * v + 2] < minZ) minZ = shapes[i].mesh.positions[3 * v + 2];
-			if (shapes[i].mesh.positions[3 * v + 2] > maxZ) maxZ = shapes[i].mesh.positions[3 * v + 2];
-		}
-	}
+            if (shapes[i].mesh.positions[3 * v + 2] < minZ) minZ = shapes[i].mesh.positions[3 * v + 2];
+            if (shapes[i].mesh.positions[3 * v + 2] > maxZ) maxZ = shapes[i].mesh.positions[3 * v + 2];
+        }
+    }
 
-	//From min and max compute necessary scale and shift for each dimension
-	float maxExtent, xExtent, yExtent, zExtent;
-	xExtent = maxX - minX;
-	yExtent = maxY - minY;
-	zExtent = maxZ - minZ;
-	if (xExtent >= yExtent && xExtent >= zExtent) {
-		maxExtent = xExtent;
-	}
-	if (yExtent >= xExtent && yExtent >= zExtent) {
-		maxExtent = yExtent;
-	}
-	if (zExtent >= xExtent && zExtent >= yExtent) {
-		maxExtent = zExtent;
-	}
-	scaleX = 2.0f / maxExtent;
-	shiftX = minX + (xExtent / 2.0f);
-	scaleY = 2.0f / maxExtent;
-	shiftY = minY + (yExtent / 2.0f);
-	scaleZ = 2.0f / maxExtent;
-	shiftZ = minZ + (zExtent) / 2.0f;
+    //From min and max compute necessary scale and shift for each dimension
+    float maxExtent, xExtent, yExtent, zExtent;
+    xExtent = maxX - minX;
+    yExtent = maxY - minY;
+    zExtent = maxZ - minZ;
+    if (xExtent >= yExtent && xExtent >= zExtent) {
+        maxExtent = xExtent;
+    }
+    if (yExtent >= xExtent && yExtent >= zExtent) {
+        maxExtent = yExtent;
+    }
+    if (zExtent >= xExtent && zExtent >= yExtent) {
+        maxExtent = zExtent;
+    }
+    scaleX = 2.0f / maxExtent;
+    shiftX = minX + (xExtent / 2.0f);
+    scaleY = 2.0f / maxExtent;
+    shiftY = minY + (yExtent / 2.0f);
+    scaleZ = 2.0f / maxExtent;
+    shiftZ = minZ + (zExtent) / 2.0f;
 
-	//Go through all verticies shift and scale them
-	for (size_t i = 0; i < shapes.size(); i++) {
-		for (size_t v = 0; v < shapes[i].mesh.positions.size() / 3; v++) {
-			shapes[i].mesh.positions[3 * v + 0] = (shapes[i].mesh.positions[3 * v + 0] - shiftX) * scaleX;
-			assert(shapes[i].mesh.positions[3 * v + 0] >= -1.0 - epsilon);
-			assert(shapes[i].mesh.positions[3 * v + 0] <= 1.0 + epsilon);
-			shapes[i].mesh.positions[3 * v + 1] = (shapes[i].mesh.positions[3 * v + 1] - shiftY) * scaleY;
-			assert(shapes[i].mesh.positions[3 * v + 1] >= -1.0 - epsilon);
-			assert(shapes[i].mesh.positions[3 * v + 1] <= 1.0 + epsilon);
-			shapes[i].mesh.positions[3 * v + 2] = (shapes[i].mesh.positions[3 * v + 2] - shiftZ) * scaleZ;
-			assert(shapes[i].mesh.positions[3 * v + 2] >= -1.0 - epsilon);
-			assert(shapes[i].mesh.positions[3 * v + 2] <= 1.0 + epsilon);
-		}
-	}
+    //Go through all verticies shift and scale them
+    for (size_t i = 0; i < shapes.size(); i++) {
+        for (size_t v = 0; v < shapes[i].mesh.positions.size() / 3; v++) {
+            shapes[i].mesh.positions[3 * v + 0] = (shapes[i].mesh.positions[3 * v + 0] - shiftX) * scaleX;
+            assert(shapes[i].mesh.positions[3 * v + 0] >= -1.0 - epsilon);
+            assert(shapes[i].mesh.positions[3 * v + 0] <= 1.0 + epsilon);
+            shapes[i].mesh.positions[3 * v + 1] = (shapes[i].mesh.positions[3 * v + 1] - shiftY) * scaleY;
+            assert(shapes[i].mesh.positions[3 * v + 1] >= -1.0 - epsilon);
+            assert(shapes[i].mesh.positions[3 * v + 1] <= 1.0 + epsilon);
+            shapes[i].mesh.positions[3 * v + 2] = (shapes[i].mesh.positions[3 * v + 2] - shiftZ) * scaleZ;
+            assert(shapes[i].mesh.positions[3 * v + 2] >= -1.0 - epsilon);
+            assert(shapes[i].mesh.positions[3 * v + 2] <= 1.0 + epsilon);
+        }
+    }
 }
 
 
@@ -98,1432 +98,1452 @@ class Application : public EventCallbacks
 
 public:
 
-	WindowManager * windowManager = nullptr;
-	
-	double mousePrevX, mousePrevY, deltaMouseX, deltaMouseY;
-	double xSensitivity = 0.01;
-	double ySensitivity = 0.01;
-	// Our shader program - use this one for Blinn-Phong
-	std::shared_ptr<Program> prog;
-
-	//Our shader program for textures
-	std::shared_ptr<Program> texProg;
-
-	//particle system
-	shared_ptr<Program> partProg;
-	vector<particleSys *> splashes;
-
-	//wave shader
-	shared_ptr<Program> waveProg;
-	//our geometry
-	shared_ptr<Shape> goal;
-	shared_ptr<vector<Shape>> pool = make_shared<vector<Shape>>();
-	vector<vec3> poolBBox;
-	shared_ptr<Shape> sphere;
-	shared_ptr<vector<Shape>> dummy = make_shared<vector<Shape>>();
-	vector<vec3> dummyBBox;
-	shared_ptr<Shape> ball;
-	shared_ptr<Shape> sky;
-	shared_ptr<Shape> water;
-	//global data for ground plane - direct load constant defined CPU data to GPU (not obj)
-	GLuint GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj;
-	int g_GiboLen;
-	//ground VAO
-	GLuint GroundVertexArrayID;
-
-	//the image to use as a texture (ground)
-	shared_ptr<Texture> texture0;
-	//texture atlas generated by Blender for painted ball
-	shared_ptr<Texture> texture1;
-	//skybox
-	shared_ptr<Texture> texture2;
-	//water splash
-	shared_ptr<Texture> texture3;
-
-	//spline/bezier camera data
-	bool goCamera = false;
-	Spline splinepath[4];
-
-	//global data (larger program should be encapsulated)
-	vec3 gMin;
-	bool debug = true;
-	float xRot = glm::radians(-90.0f), yRot = 0;
-	int wState = GLFW_RELEASE, aState = GLFW_RELEASE, sState = GLFW_RELEASE, dState = GLFW_RELEASE;
-	float gTilt = 0;
-	float gZoom = 0;
-	float gCamH = 0;
-	vec3 shooterTrans = vec3(0, .27, -7.3);
-	vec3 eyePos = shooterTrans + vec3(w.x, w.y + 1, w.z);
-	vec3 dEyePos = vec3(0, 2, 0);
-	vec3 w = vec3(0, 0, 0);
-	vec3 u = vec3(0, 0, 0);
-	
-	bool firstHandRender = true;
-	bool firstMouse = true;
-	float movementSensitivity = 0.025;
-	vec3 goalTrans = vec3(0, 1.1, -9.5);
-	vec3 handPos = vec3(0, 0, 0);
-	
-	//animation data
-	float lightTrans = 0;
-	float gTrans = -3;
-	float sTheta = 0;
-	float eTheta = 0;
-	float hTheta = 0;
-	shared_ptr<MatrixStack> rHandAnchor;
-	float animSpeed = 2;
-	int numThrows = 0;
-	float goalieTime = 0;
-	float shooterRot = 0;
-	float shooterKickSpeed = 0;
-	bool goalieColor = true;
-	double glTime = 0;
-	//where the ball starts from on the z axis
-	float currX = 0.0f, currY = 0.0f, currZ = 0.0f;
-	float z0 = 9.0;
-
-	
-	//ball and water physics data
-		//forces
-	float forceMult = 0.0001;
-	vec3 g = vec3(0.0f, -1.98f, 0.0f);
-	vec3 buoyancy = vec3(0, 1.98f, 0.0f);
-		//ball's position, and velocity constants
-	vec3 initialBallPos = handPos;
-	vec3 ballPos = handPos;
-	int maxSplashes = 20;
-	vector<vec4> splashPositions = vector<vec4>(maxSplashes);
-	int splashPtr = 0;
-	bool doSplash = true;
-	bool firstShotRender = false;
-	vec3 ballV;
-	float ballRot;
-	float vFast = 4.0f;
-	float vSlow = 1.0f;
-	bool ballActive = false;
-	bool lobbed = false;
-	double ballStart = 0.0;
-	vec3 ballW;
-
-	vec3 CameraPos;
-	bool isWASDPressed[4] = { false, false, false, false };
-	vec3 getCenterOfBBox(Shape s) {
-		return vec3(
-			(s.max.x + s.min.x) / 2,
-			(s.max.y + s.min.y) / 2,
-			(s.max.z + s.min.z) / 2
-		);
-	}
-
-	vector<vec3> getMultiShapeBBox(shared_ptr<vector<Shape>> shapes) {
-		vector<vec3> BBox;
-		BBox.push_back(vec3(FLT_MAX, FLT_MAX, FLT_MAX));
-		BBox.push_back(vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
-
-		
-		for (size_t i = 0; i < shapes->size(); ++i) {
-			//x
-			if (shapes->at(i).min.x < BBox.at(0).x) BBox.at(0).x = shapes->at(i).min.x;
-			if (shapes->at(i).max.x > BBox.at(1).x) BBox.at(1).x = shapes->at(i).min.x;
-			//y
-			if (shapes->at(i).min.y < BBox.at(0).y) BBox.at(0).y = shapes->at(i).min.y;
-			if (shapes->at(i).max.y > BBox.at(1).y) BBox.at(1).y = shapes->at(i).max.y;
-			//z
-			if (shapes->at(i).min.z < BBox.at(0).z) BBox.at(0).z = shapes->at(i).min.z;
-			if (shapes->at(i).max.z > BBox.at(1).z) BBox.at(1).z = shapes->at(i).max.z;
-		}
-		return BBox;
-	}
-
-	void processWASDInput() {
-		if (isWASDPressed[0]) {
-			eyePos -= movementSensitivity * vec3(w.x, 0.0f, w.z);
-			shooterTrans -= movementSensitivity * vec3(w.x, 0.0f, w.z);
-			dEyePos = eyePos;
-		}
-		if (isWASDPressed[1]) {
-			eyePos += movementSensitivity * vec3(u.x, 0.0f, u.z);
-			shooterTrans += movementSensitivity * vec3(u.x, 0.0f, u.z);
-			dEyePos = eyePos;
-		}
-		if (isWASDPressed[2]) {
-			eyePos += movementSensitivity * vec3(w.x, 0.0f, w.z);
-			shooterTrans += movementSensitivity * vec3(w.x, 0.0f, w.z);
-			dEyePos = eyePos;
-		}
-		if (isWASDPressed[3]) {
-			eyePos -= movementSensitivity * vec3(u.x, 0.0f, u.z);
-			shooterTrans -= movementSensitivity * vec3(u.x, 0.0f, u.z);
-			dEyePos = eyePos;
-		}
-	}
-
-	void checkCollisions() {
-		Shape poolBox = pool->at(1);
-		//if shooter has moved past max or min x of poolBox
-		if (shooterTrans.x >= poolBox.max.x * 12 - 0.3) {
-			shooterTrans.x = poolBox.max.x * 12 - 0.3;
-		}
-		if (shooterTrans.x <= poolBox.min.x * 12 + 0.3) {
-			shooterTrans.x = poolBox.min.x * 12 + 0.3;
-		}
-		//if shooter has moved past max or min y of poolBox
-		if (shooterTrans.z >= poolBox.max.z * 12 - 9.5) {
-			shooterTrans.z = poolBox.max.z * 12 - 9.5;
-		}
-		if (shooterTrans.z <= poolBox.min.z * 12 - 4) {
-			shooterTrans.z = poolBox.min.z * 12 - 4;
-		}
-		eyePos = shooterTrans + vec3(w.x, w.y + 1, w.z);
-
-		//if ball has moved past max or min of poolBox, not counting the extra space allowed to make a goal.
-		if (ballPos.x >= poolBox.max.x * 12 - 0.3) {
-			ballPos.x -= 0.025;
-			ballV = 0.7f * vec3(-ballV.x, ballV.y, ballV.z);
-		}
-		if (ballPos.x <= poolBox.min.x * 12 + 0.3) {
-			ballPos.x += 0.025;
-			ballV = 0.7f * vec3(-ballV.x, ballV.y, ballV.z);
-		}
-
-		if (ballPos.y <= poolBox.max.y * 12 + 0.75) {
-			ballPos.y += 0.025;
-			ballV = 0.1f * ballV;
-		}
-		
-		if (ballPos.z >= poolBox.max.z * 12 - 9.5) {
-			ballPos.z -= 0.025;
-			ballV = 0.7f * vec3(ballV.x, ballV.y, -ballV.z);
-		}
-		if (ballPos.z <= poolBox.min.z * 12 - 6) {
-			ballPos.z +=  0.025;
-			ballV = 0.7f * vec3(ballV.x, ballV.y, -ballV.z);
-		}
-	}
-
-	void ballPhysics() {
-		
-			vec3 splashPos = ballPos;
-
-			//throw the ball with high velocity, at a lower angle.
-			ballV += forceMult * g;
-			float depth = ((shooterTrans.y + 0.6) - ballPos.y);
-			if (depth > 0.0) {
-
-				//record the ball's position when it enters the water into a circular array of length maxSplashes 
-				//(limit # of active particle systems for performance reasons)
-				if (doSplash) {
-					splashPositions.at(splashPtr % maxSplashes) = vec4(splashPos, glfwGetTime());
-					if (length(ballV) > 0.005) {
-						splashes.at(splashPtr % maxSplashes)->reSet(ballV);
-					}
-					splashPtr++;
-					doSplash = false;
-				}
-				ballV += forceMult * (buoyancy * (1.0f + 0.6f * depth));
-				ballV.x = 0.975 * ballV.x;
-				if (ballPos.y - (shooterTrans.y + 0.6f) < 0.05 && ballV.y < 0) {
-					
-					if (length(vec3(ballV.x, 0.0f, ballV.z)) > 0.04) {
-						cout << length(vec3(ballV.x, 0.0f, ballV.z)) << " > " << 0.04 << endl;
-						ballV.y = -ballV.y;
-						ballV.x *= 0.925;
-						ballV.z *= 0.925;
-						ballPos.y += 0.005;
-					}
-					else {
-						ballV.y = 0.975 * ballV.y;
-					}
-				}
-				ballV.z = 0.975 * ballV.z;
-			}
-			else {
-				doSplash = true;
-			}
-			ballPos += ballV;
-		
-		
-	}
-
-	void drawBallPhysics(shared_ptr<MatrixStack> Model) {
-		texProg->bind();
-		
-		texture1->bind(texProg->getUniform("Texture0"));
-		glUniform1i(texProg->getUniform("flip"), 1);
-
-		Model->pushMatrix();
-		
-		if (firstShotRender) {
-			ballPos = vec3(rHandAnchor->topMatrix()[3][0], rHandAnchor->topMatrix()[3][1], rHandAnchor->topMatrix()[3][2]);
-			firstShotRender = false;
-		}
-		Model->translate(ballPos);
-		Model->scale(0.08f);
-		ballRot += 2*length(ballV);
-		Model->rotate(ballRot, cross(vec3(0, 1, 0), ballV));
-		setModel(texProg, Model);
-		ball->draw(texProg);
-		
-		texProg->unbind();
-	}
-
-	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
-	{
-
-		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		{
-			glfwSetWindowShouldClose(window, GL_TRUE);
-		}
-		
-		
-		if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-			isWASDPressed[0] = true;
-			//eyePos -= movementSensitivity * w;
-		}
-		
-		if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-			isWASDPressed[1] = true;
-			//eyePos += movementSensitivity * u;
-		}
-		if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-			isWASDPressed[2] = true;
-			//eyePos += movementSensitivity * w;
-		}
-
-		if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-			isWASDPressed[3] = true;
-			//eyePos -= movementSensitivity * u;
-		}
-
-		if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
-			isWASDPressed[0] = false;
-		}
-
-		if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
-			isWASDPressed[1] = false;
-		}
-		if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
-			isWASDPressed[2] = false;
-		}
-
-		if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
-			isWASDPressed[3] = false;
-		}
-
-		//move light
-		if (key == GLFW_KEY_Q && action == GLFW_PRESS){
-			lightTrans += 1.f;
-		}
-		if (key == GLFW_KEY_E && action == GLFW_PRESS){
-			lightTrans -= 1.f;
-		}
-		//change color of goalie
-		if (key == GLFW_KEY_M && action == GLFW_PRESS) {
-			goalieColor = false;
-		}
-		if (key == GLFW_KEY_M && action == GLFW_RELEASE) {
-			goalieColor = true;
-		}
-		//wireframe
-		if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
-			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-		}
-		if (key == GLFW_KEY_Z && action == GLFW_RELEASE) {
-			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-		}
-		//adjust xy sensitivity
-		if (key == GLFW_KEY_EQUAL && action == GLFW_PRESS) {
-			xSensitivity *= 2;
-			ySensitivity *= 2;
-
-		}
-		if (key == GLFW_KEY_MINUS && action == GLFW_PRESS) {
-			xSensitivity /= 2;
-			ySensitivity /= 2;
-		}
-		//start/stop animation
-		if (key == GLFW_KEY_G && action == GLFW_RELEASE) {
-			goCamera = !goCamera;
-		}
-		if (key == GLFW_KEY_MINUS && action == GLFW_PRESS) {
-			xSensitivity /= 2;
-			ySensitivity /= 2;
-		}
-		if (key == GLFW_KEY_C && action == GLFW_PRESS) {
-			movementSensitivity /= 2;
-			
-		}
-		if (key == GLFW_KEY_V && action == GLFW_PRESS) {
-			movementSensitivity *= 2;
-		}
-	}
-
-	void mouseCallback(GLFWwindow *window, int button, int action, int mods)
-	{
-		double posX, posY;
-
-		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-		{
-			lobbed = false;
-			
-		}
-		if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-		{
-			lobbed = true;
-		}
-
-		if (action == GLFW_PRESS) {
-			ballPos = vec3(rHandAnchor->topMatrix()[3][0], rHandAnchor->topMatrix()[3][1], rHandAnchor->topMatrix()[3][2]);
-
-			firstShotRender = true;
-			ballActive = true;
-			if (lobbed) {
-				ballV = forceMult * 300 * -vec3(w.x, w.y - 1, w.z);
-			}
-			else {
-				ballV = forceMult * 500 * -vec3(w.x, w.y - 0.5, w.z);
-			}
-			ballStart = glfwGetTime();
-		}
-	}
-
-	void mouseMovementCallback(GLFWwindow* window, double posX, double posY) {
-
-		
-		if (firstMouse) {
-			mousePrevX = posX;
-			mousePrevY = posY;
-			firstMouse = false;
-		}
-		if (!goCamera) { //don't register changes in mouse movement during the camera translation
-			//do stuff with current and previous values
-			deltaMouseX = posX - mousePrevX;
-			deltaMouseY = mousePrevY - posY;
-			xRot += xSensitivity * deltaMouseX;
-			yRot += ySensitivity * deltaMouseY;
-			//cap
-			if (yRot > glm::radians(80.0f)) yRot = glm::radians(80.0f);
-			if (yRot < -glm::radians(80.0f)) yRot = -glm::radians(80.0f);
-			//set the previous values
-			mousePrevX = posX;
-			mousePrevY = posY;
-			//update gaze and cameraRight vectors w and u
-			w = -normalize(vec3(cos(xRot) * cos(yRot), sin(yRot), sin(xRot) * cos(yRot)));
-			u = cross(w, vec3(0, 1, 0));
-		}
-	}
-
-	void scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
-	{
-
-	}
-
-
-	void resizeCallback(GLFWwindow *window, int width, int height)
-	{
-		glViewport(0, 0, width, height);
-	}
-
-	void init(const std::string& resourceDirectory)
-	{
-		GLSL::checkVersion();
-		glfwSetInputMode(windowManager->getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		
-		//allows for translucent water
-		glEnable(GL_BLEND);
-		//use alpha for source color, 1-alpha for destination color
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-
-		// Set background color.
-		glClearColor(.72f, .84f, 1.06f, 1.0f);
-		// Enable z-buffer test.
-		CHECKED_GL_CALL(glEnable(GL_DEPTH_TEST));
-		CHECKED_GL_CALL(glEnable(GL_BLEND));
-		CHECKED_GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-		CHECKED_GL_CALL(glPointSize(14.0f));
-
-
-		// Initialize the GLSL program that we will use for local shading
-		prog = make_shared<Program>();
-		prog->setVerbose(false);
-		prog->setShaderNames(resourceDirectory + "/simple_vert.glsl", resourceDirectory + "/simple_frag.glsl");
-		prog->init();
-		prog->addUniform("P");
-		prog->addUniform("V");
-		prog->addUniform("M");
-		prog->addUniform("MatAmb");
-		prog->addUniform("MatDif");
-		prog->addUniform("MatSpec");
-		prog->addUniform("MatShine");
-		prog->addUniform("lightPos");
-		
-		prog->addAttribute("vertPos");
-		prog->addAttribute("vertNor");
-
-		// Initialize the GLSL program that we will use for texture mapping
-		texProg = make_shared<Program>();
-		texProg->setVerbose(false);
-		texProg->setShaderNames(resourceDirectory + "/tex_vert_old.glsl", resourceDirectory + "/tex_frag0_old.glsl");
-		texProg->init();
-		texProg->addUniform("P");
-		texProg->addUniform("V");
-		texProg->addUniform("M");
-		texProg->addUniform("Texture0");
-		texProg->addUniform("alpha");
-		texProg->addUniform("lightPos");
-		texProg->addUniform("flip");
-		texProg->addAttribute("vertPos");
-		texProg->addAttribute("vertNor");
-		texProg->addAttribute("vertTex");
-
-		//initialize experimental wave shader
-		waveProg = make_shared<Program>();
-		waveProg->setVerbose(false);
-		waveProg->setShaderNames(resourceDirectory + "/wavetex.glsl", resourceDirectory + "/wavefrag.glsl");
-		waveProg->init();
-		waveProg->addUniform("P");
-		waveProg->addUniform("V");
-		waveProg->addUniform("M");
-		waveProg->addUniform("Texture0");
-		waveProg->addUniform("alpha");
-		waveProg->addUniform("lightPos");
-		waveProg->addUniform("flip");
-		waveProg->addAttribute("vertPos");
-		waveProg->addAttribute("vertNor");
-		waveProg->addAttribute("vertTex");
-
-		// Initialize particle shader
-		partProg = make_shared<Program>();
-		partProg->setVerbose(false);
-		partProg->setShaderNames(
-			resourceDirectory + "/lab10_vert.glsl",
-			resourceDirectory + "/lab10_frag.glsl");
-		partProg->init();
-		partProg->addUniform("P");
-		partProg->addUniform("M");
-		partProg->addUniform("V");
-		partProg->addUniform("alphaTexture");
-		partProg->addAttribute("vertPos");
-		partProg->addAttribute("pColor");
-		if (!partProg->init())
-		{
-			std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
-			exit(1);
-		}
-		//read in and load the texture
-		texture0 = make_shared<Texture>();
-  		texture0->setFilename(resourceDirectory + "/water.jpg");
-  		texture0->init();
-  		texture0->setUnit(0);
-  		texture0->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-
-		//water polo ball texture
-		texture1 = make_shared<Texture>();
-		texture1->setFilename(resourceDirectory + "/ballTex.png");
-		texture1->initAlpha();
-		texture1->setUnit(1);
-		texture1->setWrapModes(GL_REPEAT, GL_REPEAT);
-
-		//skybox texture
-		texture2 = make_shared<Texture>();
-		texture2->setFilename(resourceDirectory + "/cartoonSky.png");
-		texture2->init();
-		texture2->setUnit(2);
-		texture2->setWrapModes(GL_REPEAT, GL_REPEAT);
-
-		//water splash particle texture
-		texture3 = make_shared<Texture>();
-		texture3->setFilename(resourceDirectory + "/alpha.bmp");
-		texture3->init();
-		texture3->setUnit(3);
-		texture3->setWrapModes(GL_REPEAT, GL_REPEAT);
-
-		for (size_t i = 0; i < maxSplashes; i++)
-		{
-			particleSys* splash = new particleSys(vec3(0, 0, 0));
-			splash->gpuSetup();
-			splashes.push_back(splash);
-		}
-		
-
-		//spline paths
-		splinepath[0] = Spline(eyePos, 
-			vec3(eyePos.x / 2, (eyePos.y + 2) / 2, eyePos.z / 2), 
-			vec3(0, 2, 0), 5);
-		splinepath[1] = Spline(vec3(0, 2, 0), vec3(0, 2, -5), vec3(0, 1, -5), handPos, 5);
-		splinepath[2] = Spline(handPos,
-			vec3((handPos.x + goalTrans.x) / 2, ((handPos.y + goalTrans.y) / 2) + 1, (handPos.z + goalTrans.z) / 2),
-			vec3(goalTrans.x, goalTrans.y, goalTrans.z), 2);
-		vec3 target = normalize(vec3(
-			cos(xRot) * cos(yRot), //x
-			sin(yRot), //y
-			sin(xRot) * cos(yRot))); //z
-		//parameterized lookAt
-		splinepath[3] = Spline(eyePos + target, 
-			vec3((eyePos.x + target.x),
-				(eyePos.y + target.y + 2)/2,
-				(eyePos.z + target.z - 1)/2), 
-			vec3(0,2,-1), 5);
-	}
-
-	void initGeom(const std::string& resourceDirectory)
-	{
-		//EXAMPLE set up to read one shape from one obj file - convert to read several
-		// Initialize mesh
-		// Load geometry
- 		// Some obj files contain material information.We'll ignore them for this assignment.
- 		vector<tinyobj::shape_t> TOshapes;
- 		vector<tinyobj::material_t> objMaterials;
- 		string errStr;
-		//load in the mesh and make the shape(s)
- 		
-		vector<tinyobj::shape_t> TOshapesWater;
-		vector<tinyobj::material_t> objMaterialsWater;
-
-		// Initialize ball mesh.
-		vector<tinyobj::shape_t> TOshapesB;
- 		vector<tinyobj::material_t> objMaterialsB;
-		//load in the mesh and make the shape(s)
- 		bool rc = tinyobj::LoadObj(TOshapesB, objMaterialsB, errStr, (resourceDirectory + "/ballTex.obj").c_str(), (resourceDirectory + "untitled.mtl").c_str());
-		if (!rc) {
-			cerr << errStr << endl;
-		} else {
-			
-			ball = make_shared<Shape>();
-			ball->createShape(TOshapesB[0]);
-
-			ball->measure();
-			ball->init(true);
-		}
-
-		rc = tinyobj::LoadObj(TOshapesWater, objMaterialsWater, errStr, (resourceDirectory + "/heavymesh.obj").c_str());
-		if (!rc) {
-			cerr << errStr << endl;
-		}
-		else {
-
-			water = make_shared<Shape>();
-			water->createShape(TOshapesWater[0]);
-
-			water->measure();
-			water->init(true);
-		}
-
-
-		vector<tinyobj::shape_t> TOshapes3;
-		rc = tinyobj::LoadObj(TOshapes3, objMaterials, errStr, (resourceDirectory + "/dummy.obj").c_str());
-		if (!rc) {
-			cerr << errStr << endl;
-		}
-		else {
-
-			for (size_t i = 0; i < TOshapes3.size(); ++i) {
-				Shape s;
-				s.createShape(TOshapes3[i]);
-				dummy->push_back(s);
-				dummy->at(i).measure();
-				dummy->at(i).init(false);
-
-			}
-			dummyBBox = getMultiShapeBBox(dummy);
-		}
-		vector<tinyobj::shape_t> TOshapes5;
-		rc = tinyobj::LoadObj(TOshapes5, objMaterials, errStr, (resourceDirectory + "/Hockey Gates model.obj").c_str());
-		resize_obj(TOshapes5);
-		if (!rc) {
-			cerr << errStr << endl;
-		}
-		else {
-			goal = make_shared<Shape>();
-			
-			goal->createShape(TOshapes5[0]);
-			goal->measure();
-			goal->init(false);
-		}
-		vector<tinyobj::shape_t> TOshapes7;
-		rc = tinyobj::LoadObj(TOshapes7, objMaterials, errStr, (resourceDirectory + "/sphereTex.obj").c_str());
-		resize_obj(TOshapes7);
-		if (!rc) {
-			cerr << errStr << endl;
-		}
-		else {
-			sky = make_shared<Shape>();
-			sky->createShape(TOshapes7[0]);
-			sky->measure();
-			sky->init(true);
-		}
-		vector<tinyobj::shape_t> TOshapes6;
-		rc = tinyobj::LoadObj(TOshapes6, objMaterials, errStr, (resourceDirectory + "/pool.obj").c_str());
-		resize_obj(TOshapes6);
-		if (!rc) {
-			cerr << errStr << endl;
-		}
-		else {
-			for (size_t i = 0; i < TOshapes6.size(); ++i) {
-				Shape s;
-				s.createShape(TOshapes6[i]);
-				
-				s.reverseNormals();
-				pool->push_back(s);
-				pool->at(i).measure();
-				pool->at(i).init(false);
-
-			}
-			
-			poolBBox = getMultiShapeBBox(pool);
-		}
-		//code to load in the ground plane (CPU defined data passed to GPU)
-		initGround();
-	}
-
-	//directly pass quad for the ground to the GPU
-	void initGround() {
-
-		float g_groundSize = 20;
-		float g_groundY = 1.00;
-
-  		// A x-z plane at y = g_groundY of dimension [-g_groundSize, g_groundSize]^2
-		float GrndPos[] = {
-			-g_groundSize, g_groundY, -g_groundSize,
-			-g_groundSize, g_groundY,  g_groundSize,
-			g_groundSize, g_groundY,  g_groundSize,
-			g_groundSize, g_groundY, -g_groundSize
-		};
-
-		float GrndNorm[] = {
-			0, 1, 0,
-			0, 1, 0,
-			0, 1, 0,
-			0, 1, 0,
-			0, 1, 0,
-			0, 1, 0
-		};
-
-		static GLfloat GrndTex[] = {
-      		0, 0, // back
-      		0, 1,
-      		1, 1,
-      		1, 0 };
-
-      	unsigned short idx[] = {0, 1, 2, 0, 2, 3};
-
-		//generate the ground VAO
-      	glGenVertexArrays(1, &GroundVertexArrayID);
-      	glBindVertexArray(GroundVertexArrayID);
-
-      	g_GiboLen = 6;
-      	glGenBuffers(1, &GrndBuffObj);
-      	glBindBuffer(GL_ARRAY_BUFFER, GrndBuffObj);
-      	glBufferData(GL_ARRAY_BUFFER, sizeof(GrndPos), GrndPos, GL_STATIC_DRAW);
-
-      	glGenBuffers(1, &GrndNorBuffObj);
-      	glBindBuffer(GL_ARRAY_BUFFER, GrndNorBuffObj);
-      	glBufferData(GL_ARRAY_BUFFER, sizeof(GrndNorm), GrndNorm, GL_STATIC_DRAW);
-
-      	glGenBuffers(1, &GrndTexBuffObj);
-      	glBindBuffer(GL_ARRAY_BUFFER, GrndTexBuffObj);
-      	glBufferData(GL_ARRAY_BUFFER, sizeof(GrndTex), GrndTex, GL_STATIC_DRAW);
-
-      	glGenBuffers(1, &GIndxBuffObj);
-     	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
-      	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
+    WindowManager * windowManager = nullptr;
+    
+    double mousePrevX, mousePrevY, deltaMouseX, deltaMouseY;
+    double xSensitivity = 0.01;
+    double ySensitivity = 0.01;
+    // Our shader program - use this one for Blinn-Phong
+    std::shared_ptr<Program> prog;
+
+    //Our shader program for textures
+    std::shared_ptr<Program> texProg;
+
+    //particle system
+    shared_ptr<Program> partProg;
+    vector<particleSys *> splashes;
+
+    //wave shader
+    shared_ptr<Program> waveProg;
+    //our geometry
+    shared_ptr<Shape> goal;
+    shared_ptr<vector<Shape>> pool = make_shared<vector<Shape>>();
+    vector<vec3> poolBBox;
+    shared_ptr<Shape> sphere;
+    shared_ptr<vector<Shape>> dummy = make_shared<vector<Shape>>();
+    vector<vec3> dummyBBox;
+    shared_ptr<Shape> ball;
+    shared_ptr<Shape> sky;
+    shared_ptr<Shape> water;
+    //global data for ground plane - direct load constant defined CPU data to GPU (not obj)
+    GLuint GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj;
+    int g_GiboLen;
+    //ground VAO
+    GLuint GroundVertexArrayID;
+
+    //the image to use as a texture (ground)
+    shared_ptr<Texture> texture0;
+    //texture atlas generated by Blender for painted ball
+    shared_ptr<Texture> texture1;
+    //skybox
+    shared_ptr<Texture> texture2;
+    //water splash
+    shared_ptr<Texture> texture3;
+
+    //spline/bezier camera data
+    bool goCamera = false;
+    Spline splinepath[4];
+
+    //global data (larger program should be encapsulated)
+    vec3 gMin;
+    bool debug = true;
+    float xRot = glm::radians(-90.0f), yRot = 0;
+    int wState = GLFW_RELEASE, aState = GLFW_RELEASE, sState = GLFW_RELEASE, dState = GLFW_RELEASE;
+    float gTilt = 0;
+    float gZoom = 0;
+    float gCamH = 0;
+    vec3 shooterTrans = vec3(0, .27, -7.3);
+    vec3 eyePos = shooterTrans + vec3(w.x, w.y + 1, w.z);
+    vec3 dEyePos = vec3(0, 2, 0);
+    vec3 w = vec3(0, 0, 0);
+    vec3 u = vec3(0, 0, 0);
+    
+    bool firstHandRender = true;
+    bool firstMouse = true;
+    float movementSensitivity = 0.025;
+    vec3 goalTrans = vec3(0, 1.1, -9.5);
+    vec3 handPos = vec3(0, 0, 0);
+    
+    //animation data
+    float lightTrans = 0;
+    float gTrans = -3;
+    float sTheta = 0;
+    float eTheta = 0;
+    float hTheta = 0;
+    shared_ptr<MatrixStack> rHandAnchor;
+    float animSpeed = 2;
+    int numThrows = 0;
+    float goalieTime = 0;
+    float shooterRot = 0;
+    float shooterKickSpeed = 0;
+    bool goalieColor = true;
+    double glTime = 0;
+    //where the ball starts from on the z axis
+    float currX = 0.0f, currY = 0.0f, currZ = 0.0f;
+    float z0 = 9.0;
+
+    
+    //ball and water physics data
+        //forces
+    float forceMult = 0.0001;
+    vec3 g = vec3(0.0f, -1.98f, 0.0f);
+    vec3 buoyancy = vec3(0, 1.98f, 0.0f);
+        //ball's position, and velocity constants
+    vec3 initialBallPos = handPos;
+    vec3 ballPos = handPos;
+    int maxSplashes = 5;
+    vector<vec4> splashPositions = vector<vec4>(maxSplashes);
+    int splashPtr = 0;
+    bool doSplash = true;
+    bool firstShotRender = false;
+    vec3 ballV;
+    float ballRot;
+    float vFast = 4.0f;
+    float vSlow = 1.0f;
+    bool ballActive = false;
+    bool lobbed = false;
+    double ballStart = 0.0;
+    vec3 ballW;
+
+    vec3 CameraPos;
+    bool isWASDPressed[4] = { false, false, false, false };
+    vec3 getCenterOfBBox(Shape s) {
+        return vec3(
+            (s.max.x + s.min.x) / 2,
+            (s.max.y + s.min.y) / 2,
+            (s.max.z + s.min.z) / 2
+        );
+    }
+
+    vector<vec3> getMultiShapeBBox(shared_ptr<vector<Shape>> shapes) {
+        vector<vec3> BBox;
+        BBox.push_back(vec3(FLT_MAX, FLT_MAX, FLT_MAX));
+        BBox.push_back(vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
+
+        
+        for (size_t i = 0; i < shapes->size(); ++i) {
+            //x
+            if (shapes->at(i).min.x < BBox.at(0).x) BBox.at(0).x = shapes->at(i).min.x;
+            if (shapes->at(i).max.x > BBox.at(1).x) BBox.at(1).x = shapes->at(i).min.x;
+            //y
+            if (shapes->at(i).min.y < BBox.at(0).y) BBox.at(0).y = shapes->at(i).min.y;
+            if (shapes->at(i).max.y > BBox.at(1).y) BBox.at(1).y = shapes->at(i).max.y;
+            //z
+            if (shapes->at(i).min.z < BBox.at(0).z) BBox.at(0).z = shapes->at(i).min.z;
+            if (shapes->at(i).max.z > BBox.at(1).z) BBox.at(1).z = shapes->at(i).max.z;
+        }
+        return BBox;
+    }
+
+    void processWASDInput() {
+        if (isWASDPressed[0]) {
+            eyePos -= movementSensitivity * vec3(w.x, 0.0f, w.z);
+            shooterTrans -= movementSensitivity * vec3(w.x, 0.0f, w.z);
+            dEyePos = eyePos;
+        }
+        if (isWASDPressed[1]) {
+            eyePos += movementSensitivity * vec3(u.x, 0.0f, u.z);
+            shooterTrans += movementSensitivity * vec3(u.x, 0.0f, u.z);
+            dEyePos = eyePos;
+        }
+        if (isWASDPressed[2]) {
+            eyePos += movementSensitivity * vec3(w.x, 0.0f, w.z);
+            shooterTrans += movementSensitivity * vec3(w.x, 0.0f, w.z);
+            dEyePos = eyePos;
+        }
+        if (isWASDPressed[3]) {
+            eyePos -= movementSensitivity * vec3(u.x, 0.0f, u.z);
+            shooterTrans -= movementSensitivity * vec3(u.x, 0.0f, u.z);
+            dEyePos = eyePos;
+        }
+    }
+
+    void checkCollisions() {
+        Shape poolBox = pool->at(1);
+        //if shooter has moved past max or min x of poolBox
+        if (shooterTrans.x >= poolBox.max.x * 12 - 0.3) {
+            shooterTrans.x = poolBox.max.x * 12 - 0.3;
+        }
+        if (shooterTrans.x <= poolBox.min.x * 12 + 0.3) {
+            shooterTrans.x = poolBox.min.x * 12 + 0.3;
+        }
+        //if shooter has moved past max or min y of poolBox
+        if (shooterTrans.z >= poolBox.max.z * 12 - 9.5) {
+            shooterTrans.z = poolBox.max.z * 12 - 9.5;
+        }
+        if (shooterTrans.z <= poolBox.min.z * 12 - 4) {
+            shooterTrans.z = poolBox.min.z * 12 - 4;
+        }
+        eyePos = shooterTrans + vec3(w.x, w.y + 1, w.z);
+
+        //if ball has moved past max or min of poolBox, not counting the extra space allowed to make a goal.
+        if (ballPos.x >= poolBox.max.x * 12 - 0.3) {
+            ballPos.x -= 0.025;
+            ballV = 0.7f * vec3(-ballV.x, ballV.y, ballV.z);
+        }
+        if (ballPos.x <= poolBox.min.x * 12 + 0.3) {
+            ballPos.x += 0.025;
+            ballV = 0.7f * vec3(-ballV.x, ballV.y, ballV.z);
+        }
+
+        if (ballPos.y <= poolBox.max.y * 12 + 0.75) {
+            ballPos.y += 0.025;
+            ballV = 0.1f * ballV;
+        }
+        
+        if (ballPos.z >= poolBox.max.z * 12 - 9.5) {
+            ballPos.z -= 0.025;
+            ballV = 0.7f * vec3(ballV.x, ballV.y, -ballV.z);
+        }
+        if (ballPos.z <= poolBox.min.z * 12 - 6) {
+            ballPos.z +=  0.025;
+            ballV = 0.7f * vec3(ballV.x, ballV.y, -ballV.z);
+        }
+    }
+
+    void ballPhysics() {
+        
+            vec3 splashPos = ballPos;
+
+            //throw the ball with high velocity, at a lower angle.
+            ballV += forceMult * g;
+            float depth = ((shooterTrans.y + 0.6) - ballPos.y);
+            if (depth > 0.0) {
+
+                //record the ball's position when it enters the water into a circular array of length maxSplashes 
+                //(limit # of active particle systems for performance reasons)
+                if (doSplash) {
+                    splashPositions.at(splashPtr % maxSplashes) = vec4(splashPos, glfwGetTime());
+                    if (length(ballV) > 0.005) {
+                        splashes.at(splashPtr % maxSplashes)->reSet(ballV);
+                    }
+                    splashPtr++;
+                    doSplash = false;
+                }
+                ballV += forceMult * (buoyancy * (1.0f + 0.6f * depth));
+                ballV.x = 0.975 * ballV.x;
+                if (ballPos.y - (shooterTrans.y + 0.6f) < 0.05 && ballV.y < 0) {
+                    
+                    if (length(vec3(ballV.x, 0.0f, ballV.z)) > 0.04) {
+                        cout << length(vec3(ballV.x, 0.0f, ballV.z)) << " > " << 0.04 << endl;
+                        ballV.y = -ballV.y;
+                        ballV.x *= 0.925;
+                        ballV.z *= 0.925;
+                        ballPos.y += 0.005;
+                    }
+                    else {
+                        ballV.y = 0.975 * ballV.y;
+                    }
+                }
+                ballV.z = 0.975 * ballV.z;
+            }
+            else {
+                doSplash = true;
+            }
+            ballPos += ballV;
+        
+        
+    }
+
+    void drawBallPhysics(shared_ptr<MatrixStack> Model) {
+        texProg->bind();
+        
+        texture1->bind(texProg->getUniform("Texture0"));
+        glUniform1i(texProg->getUniform("flip"), 1);
+
+        Model->pushMatrix();
+        
+        if (firstShotRender) {
+            ballPos = vec3(rHandAnchor->topMatrix()[3][0], rHandAnchor->topMatrix()[3][1], rHandAnchor->topMatrix()[3][2]);
+            firstShotRender = false;
+        }
+        Model->translate(ballPos);
+        Model->scale(0.08f);
+        ballRot += 2*length(ballV);
+        Model->rotate(ballRot, cross(vec3(0, 1, 0), ballV));
+        setModel(texProg, Model);
+        ball->draw(texProg);
+        
+        texProg->unbind();
+    }
+
+    void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+    {
+
+        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        {
+            glfwSetWindowShouldClose(window, GL_TRUE);
+        }
+        
+        
+        if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+            isWASDPressed[0] = true;
+            //eyePos -= movementSensitivity * w;
+        }
+        
+        if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+            isWASDPressed[1] = true;
+            //eyePos += movementSensitivity * u;
+        }
+        if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+            isWASDPressed[2] = true;
+            //eyePos += movementSensitivity * w;
+        }
+
+        if (key == GLFW_KEY_D && action == GLFW_PRESS) {
+            isWASDPressed[3] = true;
+            //eyePos -= movementSensitivity * u;
+        }
+
+        if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
+            isWASDPressed[0] = false;
+        }
+
+        if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
+            isWASDPressed[1] = false;
+        }
+        if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
+            isWASDPressed[2] = false;
+        }
+
+        if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
+            isWASDPressed[3] = false;
+        }
+
+        //move light
+        if (key == GLFW_KEY_Q && action == GLFW_PRESS){
+            lightTrans += 1.f;
+        }
+        if (key == GLFW_KEY_E && action == GLFW_PRESS){
+            lightTrans -= 1.f;
+        }
+        //change color of goalie
+        if (key == GLFW_KEY_M && action == GLFW_PRESS) {
+            goalieColor = false;
+        }
+        if (key == GLFW_KEY_M && action == GLFW_RELEASE) {
+            goalieColor = true;
+        }
+        //wireframe
+        if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
+            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        }
+        if (key == GLFW_KEY_Z && action == GLFW_RELEASE) {
+            glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+        }
+        //adjust xy sensitivity
+        if (key == GLFW_KEY_EQUAL && action == GLFW_PRESS) {
+            xSensitivity *= 2;
+            ySensitivity *= 2;
+
+        }
+        if (key == GLFW_KEY_MINUS && action == GLFW_PRESS) {
+            xSensitivity /= 2;
+            ySensitivity /= 2;
+        }
+        //start/stop animation
+        if (key == GLFW_KEY_G && action == GLFW_RELEASE) {
+            goCamera = !goCamera;
+        }
+        if (key == GLFW_KEY_MINUS && action == GLFW_PRESS) {
+            xSensitivity /= 2;
+            ySensitivity /= 2;
+        }
+        if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+            movementSensitivity /= 2;
+            
+        }
+        if (key == GLFW_KEY_V && action == GLFW_PRESS) {
+            movementSensitivity *= 2;
+        }
+    }
+
+    void mouseCallback(GLFWwindow *window, int button, int action, int mods)
+    {
+        double posX, posY;
+
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+        {
+            lobbed = false;
+            
+        }
+        if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+        {
+            lobbed = true;
+        }
+
+        if (action == GLFW_PRESS) {
+            ballPos = vec3(rHandAnchor->topMatrix()[3][0], rHandAnchor->topMatrix()[3][1], rHandAnchor->topMatrix()[3][2]);
+
+            firstShotRender = true;
+            ballActive = true;
+            if (lobbed) {
+                ballV = forceMult * 300 * -vec3(w.x, w.y - 1, w.z);
+            }
+            else {
+                ballV = forceMult * 500 * -vec3(w.x, w.y - 0.5, w.z);
+            }
+            ballStart = glfwGetTime();
+        }
+    }
+
+    void mouseMovementCallback(GLFWwindow* window, double posX, double posY) {
+
+        
+        if (firstMouse) {
+            mousePrevX = posX;
+            mousePrevY = posY;
+            firstMouse = false;
+        }
+        if (!goCamera) { //don't register changes in mouse movement during the camera translation
+            //do stuff with current and previous values
+            deltaMouseX = posX - mousePrevX;
+            deltaMouseY = mousePrevY - posY;
+            xRot += xSensitivity * deltaMouseX;
+            yRot += ySensitivity * deltaMouseY;
+            //cap
+            if (yRot > glm::radians(80.0f)) yRot = glm::radians(80.0f);
+            if (yRot < -glm::radians(80.0f)) yRot = -glm::radians(80.0f);
+            //set the previous values
+            mousePrevX = posX;
+            mousePrevY = posY;
+            //update gaze and cameraRight vectors w and u
+            w = -normalize(vec3(cos(xRot) * cos(yRot), sin(yRot), sin(xRot) * cos(yRot)));
+            u = cross(w, vec3(0, 1, 0));
+        }
+    }
+
+    void scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
+    {
+
+    }
+
+
+    void resizeCallback(GLFWwindow *window, int width, int height)
+    {
+        glViewport(0, 0, width, height);
+    }
+
+    void init(const std::string& resourceDirectory)
+    {
+        GLSL::checkVersion();
+        glfwSetInputMode(windowManager->getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        
+        //allows for translucent water
+        glEnable(GL_BLEND);
+        //use alpha for source color, 1-alpha for destination color
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+        // Set background color.
+        glClearColor(.72f, .84f, 1.06f, 1.0f);
+        // Enable z-buffer test.
+        CHECKED_GL_CALL(glEnable(GL_DEPTH_TEST));
+        CHECKED_GL_CALL(glEnable(GL_BLEND));
+        CHECKED_GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        CHECKED_GL_CALL(glPointSize(14.0f));
+
+
+        // Initialize the GLSL program that we will use for local shading
+        prog = make_shared<Program>();
+        prog->setVerbose(false);
+        prog->setShaderNames(resourceDirectory + "/simple_vert.glsl", resourceDirectory + "/simple_frag.glsl");
+        prog->init();
+        prog->addUniform("P");
+        prog->addUniform("V");
+        prog->addUniform("M");
+        prog->addUniform("MatAmb");
+        prog->addUniform("MatDif");
+        prog->addUniform("MatSpec");
+        prog->addUniform("MatShine");
+        prog->addUniform("lightPos");
+        
+        prog->addAttribute("vertPos");
+        prog->addAttribute("vertNor");
+
+        // Initialize the GLSL program that we will use for texture mapping
+        texProg = make_shared<Program>();
+        texProg->setVerbose(false);
+        texProg->setShaderNames(resourceDirectory + "/tex_vert_old.glsl", resourceDirectory + "/tex_frag0_old.glsl");
+        texProg->init();
+        texProg->addUniform("P");
+        texProg->addUniform("V");
+        texProg->addUniform("M");
+        texProg->addUniform("Texture0");
+        texProg->addUniform("alpha");
+        texProg->addUniform("lightPos");
+        texProg->addUniform("flip");
+        texProg->addAttribute("vertPos");
+        texProg->addAttribute("vertNor");
+        texProg->addAttribute("vertTex");
+
+        //initialize experimental wave shader
+        waveProg = make_shared<Program>();
+        waveProg->setVerbose(false);
+        waveProg->setShaderNames(resourceDirectory + "/wavetex.glsl", resourceDirectory + "/wavefrag.glsl");
+        waveProg->init();
+        waveProg->addUniform("P");
+        waveProg->addUniform("V");
+        waveProg->addUniform("M");
+        waveProg->addUniform("Texture0");
+        waveProg->addUniform("alpha");
+        waveProg->addUniform("lightPos");
+        waveProg->addUniform("flip");
+        //stupid way of doing this, but I couldn't get uniform arrays to work.
+        waveProg->addUniform("splashPosition1");
+        waveProg->addUniform("splashPosition2");
+        waveProg->addUniform("splashPosition3");
+        waveProg->addUniform("splashPosition4");
+        waveProg->addUniform("splashPosition5");
+        waveProg->addUniform("time");
+        waveProg->addAttribute("vertPos");
+        waveProg->addAttribute("vertNor");
+        waveProg->addAttribute("vertTex");
+
+        // Initialize particle shader
+        partProg = make_shared<Program>();
+        partProg->setVerbose(false);
+        partProg->setShaderNames(
+            resourceDirectory + "/lab10_vert.glsl",
+            resourceDirectory + "/lab10_frag.glsl");
+        partProg->init();
+        partProg->addUniform("P");
+        partProg->addUniform("M");
+        partProg->addUniform("V");
+        partProg->addUniform("alphaTexture");
+        partProg->addAttribute("vertPos");
+        partProg->addAttribute("pColor");
+        if (!partProg->init())
+        {
+            std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+            exit(1);
+        }
+        //read in and load the texture
+        texture0 = make_shared<Texture>();
+        texture0->setFilename(resourceDirectory + "/water.jpg");
+        texture0->init();
+        texture0->setUnit(0);
+        texture0->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        //water polo ball texture
+        texture1 = make_shared<Texture>();
+        texture1->setFilename(resourceDirectory + "/ballTex.png");
+        texture1->initAlpha();
+        texture1->setUnit(1);
+        texture1->setWrapModes(GL_REPEAT, GL_REPEAT);
+
+        //skybox texture
+        texture2 = make_shared<Texture>();
+        texture2->setFilename(resourceDirectory + "/cartoonSky.png");
+        texture2->init();
+        texture2->setUnit(2);
+        texture2->setWrapModes(GL_REPEAT, GL_REPEAT);
+
+        //water splash particle texture
+        texture3 = make_shared<Texture>();
+        texture3->setFilename(resourceDirectory + "/alpha.bmp");
+        texture3->init();
+        texture3->setUnit(3);
+        texture3->setWrapModes(GL_REPEAT, GL_REPEAT);
+
+        for (size_t i = 0; i < maxSplashes; i++)
+        {
+            particleSys* splash = new particleSys(vec3(0, 0, 0));
+            splash->gpuSetup();
+            splashes.push_back(splash);
+        }
+        
+
+        //spline paths
+        splinepath[0] = Spline(eyePos, 
+            vec3(eyePos.x / 2, (eyePos.y + 2) / 2, eyePos.z / 2), 
+            vec3(0, 2, 0), 5);
+        splinepath[1] = Spline(vec3(0, 2, 0), vec3(0, 2, -5), vec3(0, 1, -5), handPos, 5);
+        splinepath[2] = Spline(handPos,
+            vec3((handPos.x + goalTrans.x) / 2, ((handPos.y + goalTrans.y) / 2) + 1, (handPos.z + goalTrans.z) / 2),
+            vec3(goalTrans.x, goalTrans.y, goalTrans.z), 2);
+        vec3 target = normalize(vec3(
+            cos(xRot) * cos(yRot), //x
+            sin(yRot), //y
+            sin(xRot) * cos(yRot))); //z
+        //parameterized lookAt
+        splinepath[3] = Spline(eyePos + target, 
+            vec3((eyePos.x + target.x),
+                (eyePos.y + target.y + 2)/2,
+                (eyePos.z + target.z - 1)/2), 
+            vec3(0,2,-1), 5);
+    }
+
+    void initGeom(const std::string& resourceDirectory)
+    {
+        //EXAMPLE set up to read one shape from one obj file - convert to read several
+        // Initialize mesh
+        // Load geometry
+        // Some obj files contain material information.We'll ignore them for this assignment.
+        vector<tinyobj::shape_t> TOshapes;
+        vector<tinyobj::material_t> objMaterials;
+        string errStr;
+        //load in the mesh and make the shape(s)
+        
+        vector<tinyobj::shape_t> TOshapesWater;
+        vector<tinyobj::material_t> objMaterialsWater;
+
+        // Initialize ball mesh.
+        vector<tinyobj::shape_t> TOshapesB;
+        vector<tinyobj::material_t> objMaterialsB;
+        //load in the mesh and make the shape(s)
+        bool rc = tinyobj::LoadObj(TOshapesB, objMaterialsB, errStr, (resourceDirectory + "/ballTex.obj").c_str(), (resourceDirectory + "untitled.mtl").c_str());
+        if (!rc) {
+            cerr << errStr << endl;
+        } else {
+            
+            ball = make_shared<Shape>();
+            ball->createShape(TOshapesB[0]);
+
+            ball->measure();
+            ball->init(true);
+        }
+
+        rc = tinyobj::LoadObj(TOshapesWater, objMaterialsWater, errStr, (resourceDirectory + "/heavymesh.obj").c_str());
+        if (!rc) {
+            cerr << errStr << endl;
+        }
+        else {
+
+            water = make_shared<Shape>();
+            water->createShape(TOshapesWater[0]);
+
+            water->measure();
+            water->init(true);
+        }
+
+
+        vector<tinyobj::shape_t> TOshapes3;
+        rc = tinyobj::LoadObj(TOshapes3, objMaterials, errStr, (resourceDirectory + "/dummy.obj").c_str());
+        if (!rc) {
+            cerr << errStr << endl;
+        }
+        else {
+
+            for (size_t i = 0; i < TOshapes3.size(); ++i) {
+                Shape s;
+                s.createShape(TOshapes3[i]);
+                dummy->push_back(s);
+                dummy->at(i).measure();
+                dummy->at(i).init(false);
+
+            }
+            dummyBBox = getMultiShapeBBox(dummy);
+        }
+        vector<tinyobj::shape_t> TOshapes5;
+        rc = tinyobj::LoadObj(TOshapes5, objMaterials, errStr, (resourceDirectory + "/Hockey Gates model.obj").c_str());
+        resize_obj(TOshapes5);
+        if (!rc) {
+            cerr << errStr << endl;
+        }
+        else {
+            goal = make_shared<Shape>();
+            
+            goal->createShape(TOshapes5[0]);
+            goal->measure();
+            goal->init(false);
+        }
+        vector<tinyobj::shape_t> TOshapes7;
+        rc = tinyobj::LoadObj(TOshapes7, objMaterials, errStr, (resourceDirectory + "/sphereTex.obj").c_str());
+        resize_obj(TOshapes7);
+        if (!rc) {
+            cerr << errStr << endl;
+        }
+        else {
+            sky = make_shared<Shape>();
+            sky->createShape(TOshapes7[0]);
+            sky->measure();
+            sky->init(true);
+        }
+        vector<tinyobj::shape_t> TOshapes6;
+        rc = tinyobj::LoadObj(TOshapes6, objMaterials, errStr, (resourceDirectory + "/pool.obj").c_str());
+        resize_obj(TOshapes6);
+        if (!rc) {
+            cerr << errStr << endl;
+        }
+        else {
+            for (size_t i = 0; i < TOshapes6.size(); ++i) {
+                Shape s;
+                s.createShape(TOshapes6[i]);
+                
+                s.reverseNormals();
+                pool->push_back(s);
+                pool->at(i).measure();
+                pool->at(i).init(false);
+
+            }
+            
+            poolBBox = getMultiShapeBBox(pool);
+        }
+        //code to load in the ground plane (CPU defined data passed to GPU)
+        initGround();
+    }
+
+    //directly pass quad for the ground to the GPU
+    void initGround() {
+
+        float g_groundSize = 20;
+        float g_groundY = 1.00;
+
+        // A x-z plane at y = g_groundY of dimension [-g_groundSize, g_groundSize]^2
+        float GrndPos[] = {
+            -g_groundSize, g_groundY, -g_groundSize,
+            -g_groundSize, g_groundY,  g_groundSize,
+            g_groundSize, g_groundY,  g_groundSize,
+            g_groundSize, g_groundY, -g_groundSize
+        };
+
+        float GrndNorm[] = {
+            0, 1, 0,
+            0, 1, 0,
+            0, 1, 0,
+            0, 1, 0,
+            0, 1, 0,
+            0, 1, 0
+        };
+
+        static GLfloat GrndTex[] = {
+            0, 0, // back
+            0, 1,
+            1, 1,
+            1, 0 };
+
+        unsigned short idx[] = {0, 1, 2, 0, 2, 3};
+
+        //generate the ground VAO
+        glGenVertexArrays(1, &GroundVertexArrayID);
+        glBindVertexArray(GroundVertexArrayID);
+
+        g_GiboLen = 6;
+        glGenBuffers(1, &GrndBuffObj);
+        glBindBuffer(GL_ARRAY_BUFFER, GrndBuffObj);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(GrndPos), GrndPos, GL_STATIC_DRAW);
+
+        glGenBuffers(1, &GrndNorBuffObj);
+        glBindBuffer(GL_ARRAY_BUFFER, GrndNorBuffObj);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(GrndNorm), GrndNorm, GL_STATIC_DRAW);
+
+        glGenBuffers(1, &GrndTexBuffObj);
+        glBindBuffer(GL_ARRAY_BUFFER, GrndTexBuffObj);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(GrndTex), GrndTex, GL_STATIC_DRAW);
+
+        glGenBuffers(1, &GIndxBuffObj);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
       }
 
       //code to draw the ground plane
      void drawGround(shared_ptr<Program> curS) {
-     	curS->bind();
-     	glBindVertexArray(GroundVertexArrayID);
-		glUniform1f(curS->getUniform("alpha"), 0.6f);
-		glUniform1i(curS->getUniform("flip"), 1);
-     	texture0->bind(curS->getUniform("Texture0"));
-		//draw the ground plane 
-		mat4 Trans = glm::translate(glm::mat4(1.0f), vec3(0,-0.15,0));
-		mat4 ScaleS = glm::scale(glm::mat4(1.0f), vec3(0.15,1,0.6));
-		mat4 ctm = Trans * ScaleS;
-		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
+        curS->bind();
+        glBindVertexArray(GroundVertexArrayID);
+        glUniform1f(curS->getUniform("alpha"), 0.6f);
+        glUniform1i(curS->getUniform("flip"), 1);
+        texture0->bind(curS->getUniform("Texture0"));
+        //draw the ground plane 
+        mat4 Trans = glm::translate(glm::mat4(1.0f), vec3(0,-0.15,0));
+        mat4 ScaleS = glm::scale(glm::mat4(1.0f), vec3(0.15,1,0.6));
+        mat4 ctm = Trans * ScaleS;
+        glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
 
-  		glEnableVertexAttribArray(0);
-  		glBindBuffer(GL_ARRAY_BUFFER, GrndBuffObj);
-  		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, GrndBuffObj);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-  		glEnableVertexAttribArray(1);
-  		glBindBuffer(GL_ARRAY_BUFFER, GrndNorBuffObj);
-  		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, GrndNorBuffObj);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-  		glEnableVertexAttribArray(2);
-  		glBindBuffer(GL_ARRAY_BUFFER, GrndTexBuffObj);
-  		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, GrndTexBuffObj);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-   		// draw!
-  		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
-  		glDrawElements(GL_TRIANGLES, g_GiboLen, GL_UNSIGNED_SHORT, 0);
+        // draw!
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
+        glDrawElements(GL_TRIANGLES, g_GiboLen, GL_UNSIGNED_SHORT, 0);
 
-  		glDisableVertexAttribArray(0);
-  		glDisableVertexAttribArray(1);
-  		glDisableVertexAttribArray(2);
-  		curS->unbind();
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
+        curS->unbind();
      }
 
      //helper function to pass material data to the GPU
-	void SetMaterial(shared_ptr<Program> curS, int i) {
+    void SetMaterial(shared_ptr<Program> curS, int i) {
 
-    	switch (i) {
-    		case 0: //
-    			glUniform3f(curS->getUniform("MatAmb"), 0.096f, 0.046f, 0.095f);
-    			glUniform3f(curS->getUniform("MatDif"), 0.96f, 0.46f, 0.95f);
-    			glUniform3f(curS->getUniform("MatSpec"), 0.45f, 0.23f, 0.45f);
-    			glUniform1f(curS->getUniform("MatShine"), 120.0f);
-    		break;
-    		case 1: // 
-    			glUniform3f(curS->getUniform("MatAmb"), 0.063f, 0.038f, 0.1f);
-    			glUniform3f(curS->getUniform("MatDif"), 0.63f, 0.38f, 1.0f);
-    			glUniform3f(curS->getUniform("MatSpec"), 0.3f, 0.2f, 0.5f);
-    			glUniform1f(curS->getUniform("MatShine"), 4.0f);
-    		break;
-    		case 2: //
-    			glUniform3f(curS->getUniform("MatAmb"), 0.004f, 0.05f, 0.09f);
-    			glUniform3f(curS->getUniform("MatDif"), 0.04f, 0.5f, 0.9f);
-    			glUniform3f(curS->getUniform("MatSpec"), 0.02f, 0.25f, 0.45f);
-    			glUniform1f(curS->getUniform("MatShine"), 27.9f);
-    		break;
-			case 3:
-				glUniform3f(prog->getUniform("MatAmb"), 0.09f, 0.09f, 0.09f);
-				glUniform3f(prog->getUniform("MatDif"), 0.2f, 0.2f, 0.65f);
-				glUniform3f(prog->getUniform("MatSpec"), 0.2f, 0.65f, 0.2f);
-				glUniform1f(prog->getUniform("MatShine"), 120.0f);
-			break;
-			case 4:
-				glUniform3f(prog->getUniform("MatAmb"), 0.095f, 0.095f, 0.095f);
-				glUniform3f(prog->getUniform("MatDif"), 0.90f, 0.90f, 0.9f);
-				glUniform3f(prog->getUniform("MatSpec"), 0.40f, 0.40f, 0.90f);
-				glUniform1f(prog->getUniform("MatShine"), 16.0f);
-			break;
-			case 5:
-				glUniform3f(prog->getUniform("MatAmb"), 0.095f, 0.095f, 0.095f);
-				glUniform3f(prog->getUniform("MatDif"), 0.40f, 0.40f, 0.4f);
-				glUniform3f(prog->getUniform("MatSpec"), 0.40f, 0.40f, 0.40f);
-				glUniform1f(prog->getUniform("MatShine"), 16000.0f);
-				break;
-  		}
-	}
+        switch (i) {
+            case 0: //
+                glUniform3f(curS->getUniform("MatAmb"), 0.096f, 0.046f, 0.095f);
+                glUniform3f(curS->getUniform("MatDif"), 0.96f, 0.46f, 0.95f);
+                glUniform3f(curS->getUniform("MatSpec"), 0.45f, 0.23f, 0.45f);
+                glUniform1f(curS->getUniform("MatShine"), 120.0f);
+            break;
+            case 1: // 
+                glUniform3f(curS->getUniform("MatAmb"), 0.063f, 0.038f, 0.1f);
+                glUniform3f(curS->getUniform("MatDif"), 0.63f, 0.38f, 1.0f);
+                glUniform3f(curS->getUniform("MatSpec"), 0.3f, 0.2f, 0.5f);
+                glUniform1f(curS->getUniform("MatShine"), 4.0f);
+            break;
+            case 2: //
+                glUniform3f(curS->getUniform("MatAmb"), 0.004f, 0.05f, 0.09f);
+                glUniform3f(curS->getUniform("MatDif"), 0.04f, 0.5f, 0.9f);
+                glUniform3f(curS->getUniform("MatSpec"), 0.02f, 0.25f, 0.45f);
+                glUniform1f(curS->getUniform("MatShine"), 27.9f);
+            break;
+            case 3:
+                glUniform3f(prog->getUniform("MatAmb"), 0.09f, 0.09f, 0.09f);
+                glUniform3f(prog->getUniform("MatDif"), 0.2f, 0.2f, 0.65f);
+                glUniform3f(prog->getUniform("MatSpec"), 0.2f, 0.65f, 0.2f);
+                glUniform1f(prog->getUniform("MatShine"), 120.0f);
+            break;
+            case 4:
+                glUniform3f(prog->getUniform("MatAmb"), 0.095f, 0.095f, 0.095f);
+                glUniform3f(prog->getUniform("MatDif"), 0.90f, 0.90f, 0.9f);
+                glUniform3f(prog->getUniform("MatSpec"), 0.40f, 0.40f, 0.90f);
+                glUniform1f(prog->getUniform("MatShine"), 16.0f);
+            break;
+            case 5:
+                glUniform3f(prog->getUniform("MatAmb"), 0.095f, 0.095f, 0.095f);
+                glUniform3f(prog->getUniform("MatDif"), 0.40f, 0.40f, 0.4f);
+                glUniform3f(prog->getUniform("MatSpec"), 0.40f, 0.40f, 0.40f);
+                glUniform1f(prog->getUniform("MatShine"), 16000.0f);
+                break;
+        }
+    }
 
-	void initTex(const std::string& resourceDirectory)
-	{
-		texture3 = make_shared<Texture>();
-		texture3->setFilename(resourceDirectory + "/alpha.bmp");
-		texture3->init();
-		texture3->setUnit(3);
-		texture3->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-	}
-	/* helper function to set model trasnforms */
-  	void SetModel(vec3 trans, float rotY, float rotX, float sc, shared_ptr<Program> curS) {
-  		mat4 Trans = glm::translate( glm::mat4(1.0f), trans);
-  		mat4 RotX = glm::rotate( glm::mat4(1.0f), rotX, vec3(1, 0, 0));
-  		mat4 RotY = glm::rotate( glm::mat4(1.0f), rotY, vec3(0, 1, 0));
-  		mat4 ScaleS = glm::scale(glm::mat4(1.0f), vec3(sc));
-  		mat4 ctm = Trans*RotX*RotY*ScaleS;
-  		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
-  	}
+    void initTex(const std::string& resourceDirectory)
+    {
+        texture3 = make_shared<Texture>();
+        texture3->setFilename(resourceDirectory + "/alpha.bmp");
+        texture3->init();
+        texture3->setUnit(3);
+        texture3->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+    }
+    /* helper function to set model trasnforms */
+    void SetModel(vec3 trans, float rotY, float rotX, float sc, shared_ptr<Program> curS) {
+        mat4 Trans = glm::translate( glm::mat4(1.0f), trans);
+        mat4 RotX = glm::rotate( glm::mat4(1.0f), rotX, vec3(1, 0, 0));
+        mat4 RotY = glm::rotate( glm::mat4(1.0f), rotY, vec3(0, 1, 0));
+        mat4 ScaleS = glm::scale(glm::mat4(1.0f), vec3(sc));
+        mat4 ctm = Trans*RotX*RotY*ScaleS;
+        glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
+    }
 
-	void setModel(std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack>M) {
-		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
-   	}
+    void setModel(std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack>M) {
+        glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
+    }
 
-	void updateUsingCameraPath(float frametime, std::shared_ptr<MatrixStack> View) {
-		if (goCamera) {
-			View->loadIdentity();
-			View->lookAt(eyePos, goalTrans, vec3(0, 1, 0));
-			vec3 lookAt = vec3(View->topMatrix()[2]);
-			xRot = -atan(lookAt.z, lookAt.x);
-			yRot = asin(lookAt.y);
-			firstMouse = true;
-			
-			if (!splinepath[0].isDone()) {
-				
-				splinepath[0].updateWithPolling(frametime, Spline(dEyePos,
-					vec3(dEyePos.x / 2, (dEyePos.y + 2) / 2, dEyePos.z / 2),
-					vec3(0, 2, 0), 5));
-				eyePos = splinepath[0].getPosition();
-				splinepath[3].update(frametime);
-				View->loadIdentity();
-				View->lookAt(eyePos, splinepath[3].getPosition(), vec3(0, 1, 0));
-				
-				vec3 lookAt = vec3(View->topMatrix()[2]);
-				xRot = -atan(lookAt.z, lookAt.x);
-				yRot = asin(lookAt.y);
-			}
+    void updateUsingCameraPath(float frametime, std::shared_ptr<MatrixStack> View) {
+        if (goCamera) {
+            View->loadIdentity();
+            View->lookAt(eyePos, goalTrans, vec3(0, 1, 0));
+            vec3 lookAt = vec3(View->topMatrix()[2]);
+            xRot = -atan(lookAt.z, lookAt.x);
+            yRot = asin(lookAt.y);
+            firstMouse = true;
+            
+            if (!splinepath[0].isDone()) {
+                
+                splinepath[0].updateWithPolling(frametime, Spline(dEyePos,
+                    vec3(dEyePos.x / 2, (dEyePos.y + 2) / 2, dEyePos.z / 2),
+                    vec3(0, 2, 0), 5));
+                eyePos = splinepath[0].getPosition();
+                splinepath[3].update(frametime);
+                View->loadIdentity();
+                View->lookAt(eyePos, splinepath[3].getPosition(), vec3(0, 1, 0));
+                
+                vec3 lookAt = vec3(View->topMatrix()[2]);
+                xRot = -atan(lookAt.z, lookAt.x);
+                yRot = asin(lookAt.y);
+            }
 
-			else if (!splinepath[1].isDone()) {
-				splinepath[1].updateWithPolling(frametime,
-					Spline(vec3(0, 2, 0), vec3(0, 2, -5), vec3(0, 1, -5), handPos, 5));
-				eyePos = splinepath[1].getPosition();
-				
-			}
-			else if (!splinepath[2].isDone()){
-				//parameterize position between just right of goal, and the first-rendered position of the ball (to avoid wobbling based on ball's current position)
-				splinepath[2].updateWithPolling(frametime,
-					Spline(handPos, 
-						vec3((handPos.x + goalTrans.x + 0.5) / 2, ((handPos.y + goalTrans.y) / 2) + 1, (handPos.z + goalTrans.z) / 2),
-						vec3(goalTrans.x + 0.5, goalTrans.y, goalTrans.z), 2));
-				eyePos = splinepath[2].getPosition();
-			}
-			else {
-				goCamera = false;
-			}
-		}
-		else {
-			for (int i = 0; i < 3; i++) {
-				splinepath[i].reset();
-			}
-		}
-		//update gaze and cameraRight vectors w and u
-		w = -normalize(vec3(cos(xRot) * cos(yRot), sin(yRot), sin(xRot) * cos(yRot)));
-		u = cross(w, vec3(0, 1, 0));
-	}
+            else if (!splinepath[1].isDone()) {
+                splinepath[1].updateWithPolling(frametime,
+                    Spline(vec3(0, 2, 0), vec3(0, 2, -5), vec3(0, 1, -5), handPos, 5));
+                eyePos = splinepath[1].getPosition();
+                
+            }
+            else if (!splinepath[2].isDone()){
+                //parameterize position between just right of goal, and the first-rendered position of the ball (to avoid wobbling based on ball's current position)
+                splinepath[2].updateWithPolling(frametime,
+                    Spline(handPos, 
+                        vec3((handPos.x + goalTrans.x + 0.5) / 2, ((handPos.y + goalTrans.y) / 2) + 1, (handPos.z + goalTrans.z) / 2),
+                        vec3(goalTrans.x + 0.5, goalTrans.y, goalTrans.z), 2));
+                eyePos = splinepath[2].getPosition();
+            }
+            else {
+                goCamera = false;
+            }
+        }
+        else {
+            for (int i = 0; i < 3; i++) {
+                splinepath[i].reset();
+            }
+        }
+        //update gaze and cameraRight vectors w and u
+        w = -normalize(vec3(cos(xRot) * cos(yRot), sin(yRot), sin(xRot) * cos(yRot)));
+        u = cross(w, vec3(0, 1, 0));
+    }
 
-	void shooterLegRender(shared_ptr<MatrixStack> Model, bool isRight) {
-		int offset = 0;
-		int flip = 1;
-		if (!isRight) {
-			offset = 6;
-			flip = -flip;
-		}
+    void shooterLegRender(shared_ptr<MatrixStack> Model, bool isRight) {
+        int offset = 0;
+        int flip = 1;
+        if (!isRight) {
+            offset = 6;
+            flip = -flip;
+        }
 
-		Model->pushMatrix();
-			vec3 pivotRPelvis = getCenterOfBBox(dummy->at(5 + offset));
-			Model->translate(pivotRPelvis);
-			Model->rotate(flip * 0.5 * shooterKickSpeed, vec3(0, 1, 0));
-			Model->translate(-pivotRPelvis);
-			setModel(prog, Model);
-			dummy->at(4 + offset).draw(prog);
-			dummy->at(5 + offset).draw(prog);
-			Model->pushMatrix();
-				vec3 pivotRKnee = getCenterOfBBox(dummy->at(3 + offset));
-				Model->translate(pivotRKnee);
-				Model->rotate(flip * 0.25 * shooterKickSpeed + pi<float>() / 8, vec3(0, 1, 0));
-				Model->translate(-pivotRKnee);
-				setModel(prog, Model);
-				dummy->at(2 + offset).draw(prog);
-				dummy->at(3 + offset).draw(prog);
-				Model->pushMatrix();
-					vec3 pivotRAnkle = getCenterOfBBox(dummy->at(1 + offset));
-					Model->translate(pivotRAnkle);
-					Model->rotate(pi<float>() / 3, vec3(0, 1, 0));
-					Model->translate(-pivotRAnkle);
-					setModel(prog, Model);
-					dummy->at(0 + offset).draw(prog);
-					dummy->at(1 + offset).draw(prog);
-				Model->popMatrix();
-			Model->popMatrix();
-		Model->popMatrix();
-	}
-	void shooterRender(std::shared_ptr<MatrixStack> Model) {
-		Model->pushMatrix();
-		glUniform3f(prog->getUniform("MatAmb"), 0.065f, 0.020f, 0.020f);
-		glUniform3f(prog->getUniform("MatDif"), 0.65f, 0.2f, 0.2f);
-		glUniform3f(prog->getUniform("MatSpec"), 0.65f, 0.2f, 0.2f);
-		glUniform1f(prog->getUniform("MatShine"), 200.0f);
-		Model->loadIdentity();
-		Model->translate(shooterTrans);
-		Model->rotate(pi<float>() / 2, vec3(-1, 0, 0));
-		Model->rotate(-xRot, vec3(0, 0, 1));
-		Model->scale(0.0050f);
-		//draw the lower body
-		setModel(prog, Model);
-		//draw hips and belly
-		for (size_t i = 12; i < 14; i++) {
-			dummy->at(i).draw(prog);
-		}
-		//draw right leg
-		
-		
-		shooterLegRender(Model, true);
-		
-		//draw left leg
-		
-		shooterLegRender(Model, false);
-		
-		
-		//draw the upper body
-			Model->pushMatrix();
-				vec3 pivotBelly = getCenterOfBBox(dummy->at(13));
-				Model->translate(pivotBelly);
-				Model->rotate(0.5*shooterRot, vec3(0, 0, 1));
-				Model->rotate(0.2*shooterRot, vec3(0, 1, 0));
-				Model->translate(-pivotBelly);
-				setModel(prog, Model);
-				dummy->at(14).draw(prog);
-				//draw the right arm
-				shooterRightArmRender(Model);
-				// draw the left arm
-				shooterLeftArmRender(Model);
-				//reverse-rotate the head and neck so that they stay aligned with hips
-				Model->pushMatrix();
-					vec3 pivotNeck = getCenterOfBBox(dummy->at(27));
-					Model->translate(pivotNeck);
-					Model->rotate(0.5*shooterRot, vec3(0, 0, -1));
-					Model->rotate(0.2 * shooterRot, vec3(0, -1, 0));
-					Model->translate(-pivotNeck);
-					setModel(prog, Model);
-					for (size_t i = 27; i < dummy->size(); i++) {
-						dummy->at(i).draw(prog);
-					}
-				Model->popMatrix();
-			Model->popMatrix();
-		Model->popMatrix();
-	}
+        Model->pushMatrix();
+            vec3 pivotRPelvis = getCenterOfBBox(dummy->at(5 + offset));
+            Model->translate(pivotRPelvis);
+            Model->rotate(flip * 0.5 * shooterKickSpeed, vec3(0, 1, 0));
+            Model->translate(-pivotRPelvis);
+            setModel(prog, Model);
+            dummy->at(4 + offset).draw(prog);
+            dummy->at(5 + offset).draw(prog);
+            Model->pushMatrix();
+                vec3 pivotRKnee = getCenterOfBBox(dummy->at(3 + offset));
+                Model->translate(pivotRKnee);
+                Model->rotate(flip * 0.25 * shooterKickSpeed + pi<float>() / 8, vec3(0, 1, 0));
+                Model->translate(-pivotRKnee);
+                setModel(prog, Model);
+                dummy->at(2 + offset).draw(prog);
+                dummy->at(3 + offset).draw(prog);
+                Model->pushMatrix();
+                    vec3 pivotRAnkle = getCenterOfBBox(dummy->at(1 + offset));
+                    Model->translate(pivotRAnkle);
+                    Model->rotate(pi<float>() / 3, vec3(0, 1, 0));
+                    Model->translate(-pivotRAnkle);
+                    setModel(prog, Model);
+                    dummy->at(0 + offset).draw(prog);
+                    dummy->at(1 + offset).draw(prog);
+                Model->popMatrix();
+            Model->popMatrix();
+        Model->popMatrix();
+    }
+    void shooterRender(std::shared_ptr<MatrixStack> Model) {
+        Model->pushMatrix();
+        glUniform3f(prog->getUniform("MatAmb"), 0.065f, 0.020f, 0.020f);
+        glUniform3f(prog->getUniform("MatDif"), 0.65f, 0.2f, 0.2f);
+        glUniform3f(prog->getUniform("MatSpec"), 0.65f, 0.2f, 0.2f);
+        glUniform1f(prog->getUniform("MatShine"), 200.0f);
+        Model->loadIdentity();
+        Model->translate(shooterTrans);
+        Model->rotate(pi<float>() / 2, vec3(-1, 0, 0));
+        Model->rotate(-xRot, vec3(0, 0, 1));
+        Model->scale(0.0050f);
+        //draw the lower body
+        setModel(prog, Model);
+        //draw hips and belly
+        for (size_t i = 12; i < 14; i++) {
+            dummy->at(i).draw(prog);
+        }
+        //draw right leg
+        
+        
+        shooterLegRender(Model, true);
+        
+        //draw left leg
+        
+        shooterLegRender(Model, false);
+        
+        
+        //draw the upper body
+            Model->pushMatrix();
+                vec3 pivotBelly = getCenterOfBBox(dummy->at(13));
+                Model->translate(pivotBelly);
+                Model->rotate(0.5*shooterRot, vec3(0, 0, 1));
+                Model->rotate(0.2*shooterRot, vec3(0, 1, 0));
+                Model->translate(-pivotBelly);
+                setModel(prog, Model);
+                dummy->at(14).draw(prog);
+                //draw the right arm
+                shooterRightArmRender(Model);
+                // draw the left arm
+                shooterLeftArmRender(Model);
+                //reverse-rotate the head and neck so that they stay aligned with hips
+                Model->pushMatrix();
+                    vec3 pivotNeck = getCenterOfBBox(dummy->at(27));
+                    Model->translate(pivotNeck);
+                    Model->rotate(0.5*shooterRot, vec3(0, 0, -1));
+                    Model->rotate(0.2 * shooterRot, vec3(0, -1, 0));
+                    Model->translate(-pivotNeck);
+                    setModel(prog, Model);
+                    for (size_t i = 27; i < dummy->size(); i++) {
+                        dummy->at(i).draw(prog);
+                    }
+                Model->popMatrix();
+            Model->popMatrix();
+        Model->popMatrix();
+    }
 
-	void shooterRightArmRender(std::shared_ptr<MatrixStack> Model) {
-		int mirror = 1;
-		int armIndex = 15;
-		float shoulderRot = shooterRot;
-		float elbowRot = cos(2 * pi<double>());
-		Model->pushMatrix();
-			vec3 pivotTorso = getCenterOfBBox(dummy->at(14));
-			Model->translate(vec3(0, mirror * (1 * -0.5 + 5), 3 * -0.5));
-			setModel(prog, Model);
-			dummy->at(armIndex).draw(prog);
-				Model->pushMatrix();
-				vec3 rShoulder = getCenterOfBBox(dummy->at(armIndex));
-				Model->translate(rShoulder); //center of shoulder
-				//rotate upper arm towards goal just a small amount at the end of the throw. Hips, chest, and elbow does most of the work.
-				Model->rotate((pi<float>() / 8) * shoulderRot + (pi<float>() / 8), vec3(mirror * 0, 0, 1)); 
-				Model->translate(-rShoulder);
-				setModel(prog, Model);
-				dummy->at(armIndex + 1).draw(prog);
-				dummy->at(armIndex + 2).draw(prog);
+    void shooterRightArmRender(std::shared_ptr<MatrixStack> Model) {
+        int mirror = 1;
+        int armIndex = 15;
+        float shoulderRot = shooterRot;
+        float elbowRot = cos(2 * pi<double>());
+        Model->pushMatrix();
+            vec3 pivotTorso = getCenterOfBBox(dummy->at(14));
+            Model->translate(vec3(0, mirror * (1 * -0.5 + 5), 3 * -0.5));
+            setModel(prog, Model);
+            dummy->at(armIndex).draw(prog);
+                Model->pushMatrix();
+                vec3 rShoulder = getCenterOfBBox(dummy->at(armIndex));
+                Model->translate(rShoulder); //center of shoulder
+                //rotate upper arm towards goal just a small amount at the end of the throw. Hips, chest, and elbow does most of the work.
+                Model->rotate((pi<float>() / 8) * shoulderRot + (pi<float>() / 8), vec3(mirror * 0, 0, 1)); 
+                Model->translate(-rShoulder);
+                setModel(prog, Model);
+                dummy->at(armIndex + 1).draw(prog);
+                dummy->at(armIndex + 2).draw(prog);
 
-					Model->pushMatrix();
-						vec3 rElbow = getCenterOfBBox(dummy->at(armIndex + 2));
-						Model->translate(rElbow); //center of elbow
-						Model->rotate((pi<float>() / 4), vec3(mirror * -1, 0, 0));
-						Model->rotate((pi<float>() / 4) * elbowRot- (pi<float>() / 4), vec3(mirror * 0, 1, 0));
-						Model->translate(-rElbow);
-						setModel(prog, Model);
-						setModel(prog, Model);
-						dummy->at(armIndex + 3).draw(prog);
-						dummy->at(armIndex + 4).draw(prog);
-						Model->pushMatrix();
-						vec3 rWrist = getCenterOfBBox(dummy->at(armIndex + 4));
-						Model->translate(rWrist); //center of wrist
-						Model->rotate(-0.5*pi<float>()/2*shooterRot +  pi<float>() / 2, vec3(0, -1, 0));
-						
-						Model->translate(-rWrist);
-						Model->translate(getCenterOfBBox(dummy->at(armIndex + 5))); //move the ctm to the hand
-						rHandAnchor = make_shared<MatrixStack>(*Model); //snapshot the ctm at this point
-						Model->translate(-getCenterOfBBox(dummy->at(armIndex + 5)));
-						setModel(prog, Model);
-						dummy->at(armIndex + 5).draw(prog);
-					Model->popMatrix();
-				Model->popMatrix();
-			Model->popMatrix();
-		Model->popMatrix();
-	}
+                    Model->pushMatrix();
+                        vec3 rElbow = getCenterOfBBox(dummy->at(armIndex + 2));
+                        Model->translate(rElbow); //center of elbow
+                        Model->rotate((pi<float>() / 4), vec3(mirror * -1, 0, 0));
+                        Model->rotate((pi<float>() / 4) * elbowRot- (pi<float>() / 4), vec3(mirror * 0, 1, 0));
+                        Model->translate(-rElbow);
+                        setModel(prog, Model);
+                        setModel(prog, Model);
+                        dummy->at(armIndex + 3).draw(prog);
+                        dummy->at(armIndex + 4).draw(prog);
+                        Model->pushMatrix();
+                        vec3 rWrist = getCenterOfBBox(dummy->at(armIndex + 4));
+                        Model->translate(rWrist); //center of wrist
+                        Model->rotate(-0.5*pi<float>()/2*shooterRot +  pi<float>() / 2, vec3(0, -1, 0));
+                        
+                        Model->translate(-rWrist);
+                        Model->translate(getCenterOfBBox(dummy->at(armIndex + 5))); //move the ctm to the hand
+                        rHandAnchor = make_shared<MatrixStack>(*Model); //snapshot the ctm at this point
+                        Model->translate(-getCenterOfBBox(dummy->at(armIndex + 5)));
+                        setModel(prog, Model);
+                        dummy->at(armIndex + 5).draw(prog);
+                    Model->popMatrix();
+                Model->popMatrix();
+            Model->popMatrix();
+        Model->popMatrix();
+    }
 
-	void ballRender(std::shared_ptr<MatrixStack> Model) {
-		texProg->bind();
-		texture1->bind(texProg->getUniform("Texture0"));
-		glUniform1i(texProg->getUniform("flip"), 1);
-		rHandAnchor->pushMatrix();
-		rHandAnchor->scale(12);
-		rHandAnchor->translate(vec3(0, 0, -1));
-		setModel(texProg, rHandAnchor);
-		if (firstHandRender) {
-			handPos = vec3(rHandAnchor->topMatrix()[3][0], rHandAnchor->topMatrix()[3][1], rHandAnchor->topMatrix()[3][2]);
-			firstHandRender = false;
-		}
-		
-		
-		ball->draw(texProg);
-		rHandAnchor->popMatrix();
-		texProg->unbind();
-	}
+    void ballRender(std::shared_ptr<MatrixStack> Model) {
+        texProg->bind();
+        texture1->bind(texProg->getUniform("Texture0"));
+        glUniform1i(texProg->getUniform("flip"), 1);
+        rHandAnchor->pushMatrix();
+        rHandAnchor->scale(12);
+        rHandAnchor->translate(vec3(0, 0, -1));
+        setModel(texProg, rHandAnchor);
+        if (firstHandRender) {
+            handPos = vec3(rHandAnchor->topMatrix()[3][0], rHandAnchor->topMatrix()[3][1], rHandAnchor->topMatrix()[3][2]);
+            firstHandRender = false;
+        }
+        
+        
+        ball->draw(texProg);
+        rHandAnchor->popMatrix();
+        texProg->unbind();
+    }
 
-	void skyBoxRender(std::shared_ptr<MatrixStack> Model) {
-		texProg->bind();
-		glUniform1i(texProg->getUniform("flip"), -1);
-		glUniform3f(texProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
-		texture2->bind(texProg->getUniform("Texture0"));
-		Model->loadIdentity();
-		Model->scale(40.0f);
-		setModel(texProg, Model);
-		sky->draw(texProg);
-	}
+    void skyBoxRender(std::shared_ptr<MatrixStack> Model) {
+        texProg->bind();
+        glUniform1i(texProg->getUniform("flip"), -1);
+        glUniform3f(texProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
+        texture2->bind(texProg->getUniform("Texture0"));
+        Model->loadIdentity();
+        Model->scale(40.0f);
+        setModel(texProg, Model);
+        sky->draw(texProg);
+    }
 
-	void shooterLeftArmRender(std::shared_ptr<MatrixStack> Model) {
-		int mirror = -1;
-		int armIndex = 21;
+    void shooterLeftArmRender(std::shared_ptr<MatrixStack> Model) {
+        int mirror = -1;
+        int armIndex = 21;
 
-		Model->pushMatrix();
-			vec3 pivotTorso = getCenterOfBBox(dummy->at(14));
-			Model->translate(vec3(0, mirror * (1 * -0.5 + 5), 3 * -0.5));
-			setModel(prog, Model);
-			dummy->at(armIndex).draw(prog);
-				Model->pushMatrix();
-				vec3 rShoulder = getCenterOfBBox(dummy->at(armIndex));
-				Model->translate(rShoulder); //center of shoulder
-				Model->rotate((pi<float>() / 4) * -0.5 - (pi<float>() / 8), vec3(mirror * -1, 0, 0));
-				Model->translate(-rShoulder);
-				setModel(prog, Model);
-				dummy->at(armIndex + 1).draw(prog);
-				dummy->at(armIndex + 2).draw(prog);
+        Model->pushMatrix();
+            vec3 pivotTorso = getCenterOfBBox(dummy->at(14));
+            Model->translate(vec3(0, mirror * (1 * -0.5 + 5), 3 * -0.5));
+            setModel(prog, Model);
+            dummy->at(armIndex).draw(prog);
+                Model->pushMatrix();
+                vec3 rShoulder = getCenterOfBBox(dummy->at(armIndex));
+                Model->translate(rShoulder); //center of shoulder
+                Model->rotate((pi<float>() / 4) * -0.5 - (pi<float>() / 8), vec3(mirror * -1, 0, 0));
+                Model->translate(-rShoulder);
+                setModel(prog, Model);
+                dummy->at(armIndex + 1).draw(prog);
+                dummy->at(armIndex + 2).draw(prog);
 
-					Model->pushMatrix();
-						vec3 rElbow = getCenterOfBBox(dummy->at(armIndex + 2));
-						Model->translate(rElbow); //center of shoulder
-						Model->rotate((pi<float>() / 6) * -0.5 - (pi<float>() / 16), vec3(mirror * -1, 0, 0));
-						Model->translate(-rElbow);
-						setModel(prog, Model);
-						setModel(prog, Model);
-						dummy->at(armIndex + 3).draw(prog);
-						dummy->at(armIndex + 4).draw(prog);
-						Model->pushMatrix();
-						vec3 rWrist = getCenterOfBBox(dummy->at(armIndex + 4));
-						Model->translate(rWrist); //center of shoulder
-						Model->rotate(pi<float>() / 2, vec3(0, -1, 0));
-						Model->translate(-rWrist);
-						
-						
-						setModel(prog, Model);
-						
-						dummy->at(armIndex + 5).draw(prog);
-					Model->popMatrix();
-				Model->popMatrix();
-			Model->popMatrix();
-		Model->popMatrix();
-	}
-	
+                    Model->pushMatrix();
+                        vec3 rElbow = getCenterOfBBox(dummy->at(armIndex + 2));
+                        Model->translate(rElbow); //center of shoulder
+                        Model->rotate((pi<float>() / 6) * -0.5 - (pi<float>() / 16), vec3(mirror * -1, 0, 0));
+                        Model->translate(-rElbow);
+                        setModel(prog, Model);
+                        setModel(prog, Model);
+                        dummy->at(armIndex + 3).draw(prog);
+                        dummy->at(armIndex + 4).draw(prog);
+                        Model->pushMatrix();
+                        vec3 rWrist = getCenterOfBBox(dummy->at(armIndex + 4));
+                        Model->translate(rWrist); //center of shoulder
+                        Model->rotate(pi<float>() / 2, vec3(0, -1, 0));
+                        Model->translate(-rWrist);
+                        
+                        
+                        setModel(prog, Model);
+                        
+                        dummy->at(armIndex + 5).draw(prog);
+                    Model->popMatrix();
+                Model->popMatrix();
+            Model->popMatrix();
+        Model->popMatrix();
+    }
+    
 
-	void goalieRender(std::shared_ptr<MatrixStack> Model) {
-		Model->pushMatrix();
-		if (goalieColor) {
-			glUniform3f(prog->getUniform("MatAmb"), 0.020f, 0.065f, 0.020f);
-			glUniform3f(prog->getUniform("MatDif"), 0.2f, 0.65f, 0.2f);
-			glUniform3f(prog->getUniform("MatSpec"), 0.2f, 0.65f, 0.2f);
-			glUniform1f(prog->getUniform("MatShine"), 200.0f);
-		}
-		else {
-			glUniform3f(prog->getUniform("MatAmb"), 0.085f, 0.085f, 0.020f);
-			glUniform3f(prog->getUniform("MatDif"), 0.85f, 0.85f, 0.2f);
-			glUniform3f(prog->getUniform("MatSpec"), 0.85f, 0.85f, 0.2f);
-			glUniform1f(prog->getUniform("MatShine"), 200.0f);
-		}
-		Model->loadIdentity();
-		//get the whole thing into position
-		Model->translate(vec3(0, .27 + 0.04 * goalieTime, -9.3));
-		Model->rotate(pi<float>() / 2, vec3(-1, 0, 0));
-		Model->rotate(pi<float>() / 2, vec3(0, 0, -1));
-		Model->scale(0.0050f);
-		setModel(prog, Model);
-		//draw torso and below
-		for (size_t i = 0; i < 15; ++i) {
-			dummy->at(i).draw(prog);
-		}
-		//draw neck and head with same transforms as lower body
-		dummy->at(27).draw(prog);
-		dummy->at(28).draw(prog);
+    void goalieRender(std::shared_ptr<MatrixStack> Model) {
+        Model->pushMatrix();
+        if (goalieColor) {
+            glUniform3f(prog->getUniform("MatAmb"), 0.020f, 0.065f, 0.020f);
+            glUniform3f(prog->getUniform("MatDif"), 0.2f, 0.65f, 0.2f);
+            glUniform3f(prog->getUniform("MatSpec"), 0.2f, 0.65f, 0.2f);
+            glUniform1f(prog->getUniform("MatShine"), 200.0f);
+        }
+        else {
+            glUniform3f(prog->getUniform("MatAmb"), 0.085f, 0.085f, 0.020f);
+            glUniform3f(prog->getUniform("MatDif"), 0.85f, 0.85f, 0.2f);
+            glUniform3f(prog->getUniform("MatSpec"), 0.85f, 0.85f, 0.2f);
+            glUniform1f(prog->getUniform("MatShine"), 200.0f);
+        }
+        Model->loadIdentity();
+        //get the whole thing into position
+        Model->translate(vec3(0, .27 + 0.04 * goalieTime, -9.3));
+        Model->rotate(pi<float>() / 2, vec3(-1, 0, 0));
+        Model->rotate(pi<float>() / 2, vec3(0, 0, -1));
+        Model->scale(0.0050f);
+        setModel(prog, Model);
+        //draw torso and below
+        for (size_t i = 0; i < 15; ++i) {
+            dummy->at(i).draw(prog);
+        }
+        //draw neck and head with same transforms as lower body
+        dummy->at(27).draw(prog);
+        dummy->at(28).draw(prog);
 
-		//right side
-		goalieArmRender(Model, 15, 1);
+        //right side
+        goalieArmRender(Model, 15, 1);
 
-		//left side
-		goalieArmRender(Model, 21, -1);
-		Model->popMatrix();
-	}
+        //left side
+        goalieArmRender(Model, 21, -1);
+        Model->popMatrix();
+    }
 
-	void goalieArmRender(std::shared_ptr<MatrixStack> Model, int armIndex, int mirror) {
-		Model->pushMatrix();
-		vec3 pivotTorso = getCenterOfBBox(dummy->at(14));
-		Model->translate(vec3(0, mirror * (1 * goalieTime + 5), 3 * goalieTime));
-		setModel(prog, Model);
-		dummy->at(armIndex).draw(prog);
-		Model->pushMatrix();
-		vec3 rShoulder = getCenterOfBBox(dummy->at(armIndex));
-		Model->translate(rShoulder); //center of shoulder
-		Model->rotate((pi<float>() / 4) * goalieTime - (pi<float>() / 8), vec3(mirror * -1, 0, 0));
-		Model->translate(-rShoulder);
-		setModel(prog, Model);
-		dummy->at(armIndex + 1).draw(prog);
-		dummy->at(armIndex + 2).draw(prog);
+    void goalieArmRender(std::shared_ptr<MatrixStack> Model, int armIndex, int mirror) {
+        Model->pushMatrix();
+        vec3 pivotTorso = getCenterOfBBox(dummy->at(14));
+        Model->translate(vec3(0, mirror * (1 * goalieTime + 5), 3 * goalieTime));
+        setModel(prog, Model);
+        dummy->at(armIndex).draw(prog);
+        Model->pushMatrix();
+        vec3 rShoulder = getCenterOfBBox(dummy->at(armIndex));
+        Model->translate(rShoulder); //center of shoulder
+        Model->rotate((pi<float>() / 4) * goalieTime - (pi<float>() / 8), vec3(mirror * -1, 0, 0));
+        Model->translate(-rShoulder);
+        setModel(prog, Model);
+        dummy->at(armIndex + 1).draw(prog);
+        dummy->at(armIndex + 2).draw(prog);
 
-		Model->pushMatrix();
-		vec3 rElbow = getCenterOfBBox(dummy->at(armIndex + 2));
-		Model->translate(rElbow); //center of shoulder
-		Model->rotate((pi<float>() / 6) * goalieTime - (pi<float>() / 16), vec3(mirror * -1, 0, 0));
-		Model->translate(-rElbow);
-		setModel(prog, Model);
-		setModel(prog, Model);
-		dummy->at(armIndex + 3).draw(prog);
-		dummy->at(armIndex + 4).draw(prog);
-		Model->pushMatrix();
-		vec3 rWrist = getCenterOfBBox(dummy->at(armIndex + 4));
-		Model->translate(rWrist); //center of shoulder
-		Model->rotate(pi<float>() / 2, vec3(0, -1, 0));
-		Model->translate(-rWrist);
-		setModel(prog, Model);
-		dummy->at(armIndex + 5).draw(prog);
-		Model->popMatrix();
-		Model->popMatrix();
-		Model->popMatrix();
-		Model->popMatrix();
-	}
+        Model->pushMatrix();
+        vec3 rElbow = getCenterOfBBox(dummy->at(armIndex + 2));
+        Model->translate(rElbow); //center of shoulder
+        Model->rotate((pi<float>() / 6) * goalieTime - (pi<float>() / 16), vec3(mirror * -1, 0, 0));
+        Model->translate(-rElbow);
+        setModel(prog, Model);
+        setModel(prog, Model);
+        dummy->at(armIndex + 3).draw(prog);
+        dummy->at(armIndex + 4).draw(prog);
+        Model->pushMatrix();
+        vec3 rWrist = getCenterOfBBox(dummy->at(armIndex + 4));
+        Model->translate(rWrist); //center of shoulder
+        Model->rotate(pi<float>() / 2, vec3(0, -1, 0));
+        Model->translate(-rWrist);
+        setModel(prog, Model);
+        dummy->at(armIndex + 5).draw(prog);
+        Model->popMatrix();
+        Model->popMatrix();
+        Model->popMatrix();
+        Model->popMatrix();
+    }
 
-	void goalRender(std::shared_ptr<MatrixStack> Model, std::shared_ptr<MatrixStack> Projection) {
-		Model->pushMatrix();
-		SetMaterial(prog, 5);
-		Model->loadIdentity();
-		Model->translate(goalTrans);
-		Model->scale(vec3(.72, .54, .6));
-		setModel(prog, Model);
-		goal->draw(prog);
-		
-		Model->popMatrix();
-	}
+    void goalRender(std::shared_ptr<MatrixStack> Model, std::shared_ptr<MatrixStack> Projection) {
+        Model->pushMatrix();
+        SetMaterial(prog, 5);
+        Model->loadIdentity();
+        Model->translate(goalTrans);
+        Model->scale(vec3(.72, .54, .6));
+        setModel(prog, Model);
+        goal->draw(prog);
+        
+        Model->popMatrix();
+    }
 
-	void poolRender(std::shared_ptr<MatrixStack> Model) {
-		Model->pushMatrix();
-		SetMaterial(prog, 3);
-		Model->loadIdentity();
-		Model->translate(vec3(0, 2, 0));
-		Model->rotate(pi<float>(), vec3(0, 1, 0));
-		Model->scale(vec3(12, 12, 12));
-		setModel(prog, Model);
-		for (size_t i = 0; i < pool->size(); ++i) {
-			if (i == 1) {
-				continue; //don't draw the water
-			}
-			if (i <= 1) {
-				SetMaterial(prog, 3);
-			}
-			else {
-				SetMaterial(prog, 4);
-			}
-			pool->at(i).draw(prog);
-		}
-		Model->popMatrix();
-	}
+    void poolRender(std::shared_ptr<MatrixStack> Model) {
+        Model->pushMatrix();
+        SetMaterial(prog, 3);
+        Model->loadIdentity();
+        Model->translate(vec3(0, 2, 0));
+        Model->rotate(pi<float>(), vec3(0, 1, 0));
+        Model->scale(vec3(12, 12, 12));
+        setModel(prog, Model);
+        for (size_t i = 0; i < pool->size(); ++i) {
+            if (i == 1) {
+                continue; //don't draw the water
+            }
+            if (i <= 1) {
+                SetMaterial(prog, 3);
+            }
+            else {
+                SetMaterial(prog, 4);
+            }
+            pool->at(i).draw(prog);
+        }
+        Model->popMatrix();
+    }
 
-	void drawWater(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> View, shared_ptr<MatrixStack> Projection){
-		texProg->bind();
-		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
-		glUniform3f(texProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
-		glUniform1f(texProg->getUniform("alpha"), 0.5f);
-		texture0->bind(texProg->getUniform("Texture0"));
-		glUniform1i(texProg->getUniform("flip"), 1);
-		Model->pushMatrix();
-		Model->loadIdentity();
-		Model->translate(vec3(0.0f,0.85f,-4.0f));
-		Model->scale(vec3(3.0f, 1.0f, 8.0f));
-		setModel(texProg, Model);
-		water->draw(texProg);
-		Model->popMatrix();
-		texProg->unbind();
-	}
-	void drawSplash(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> View, shared_ptr<MatrixStack> Projection) {
-		//draw particles
-		//set particle system camera
-		partProg->bind();
-		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix())));
-		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix())));
-		texture3->bind(partProg->getUniform("alphaTexture"));
-		
-		for (int i = 0; i < splashPositions.size(); i++) {
-			splashes.at(i)->setCamera(View->topMatrix());
-			
-			Model->pushMatrix();
-			Model->loadIdentity();
-			Model->translate(vec3(splashPositions.at(i)));
-			CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix())));
-			splashes.at(i)->drawMe(partProg);
-			splashes.at(i)->update();
+    void drawWater(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> View, shared_ptr<MatrixStack> Projection){
+        waveProg->bind();
+        glUniformMatrix4fv(waveProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+        glUniformMatrix4fv(waveProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
+        glUniform3f(waveProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
+        glUniform1f(waveProg->getUniform("alpha"), 0.5f);
+        texture0->bind(waveProg->getUniform("Texture0"));
+        glUniform1i(waveProg->getUniform("flip"), 1);
 
-			Model->popMatrix();
-			
-		}
-		partProg->unbind();
-	}
+        sendWaveData();
 
-	void render(float frametime) {
-		glTime = glfwGetTime();
-		processWASDInput();
-		checkCollisions();
-		// Get current frame buffer size.
-		int width, height;
-		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
-		glViewport(0, 0, width, height);
+        Model->pushMatrix();
+        Model->loadIdentity();
+        Model->translate(vec3(0.0f,0.85f,-4.0f));
+        Model->scale(vec3(3.0f, 1.0f, 8.0f));
+        setModel(waveProg, Model);
+        water->draw(waveProg);
+        Model->popMatrix();
+        waveProg->unbind();
+    }
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		// Clear framebuffer
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    void sendWaveData() {
+        glUniform4f(waveProg->getUniform("splashPosition1"), splashPositions[0].x, splashPositions[0].y, splashPositions[0].z, splashPositions[0].a);
+        glUniform4f(waveProg->getUniform("splashPosition2"), splashPositions[1].x, splashPositions[1].y, splashPositions[1].z, splashPositions[1].a);
+        glUniform4f(waveProg->getUniform("splashPosition3"), splashPositions[2].x, splashPositions[2].y, splashPositions[2].z, splashPositions[2].a);
+        glUniform4f(waveProg->getUniform("splashPosition4"), splashPositions[3].x, splashPositions[3].y, splashPositions[3].z, splashPositions[3].a);
+        glUniform4f(waveProg->getUniform("splashPosition5"), splashPositions[4].x, splashPositions[4].y, splashPositions[4].z, splashPositions[4].a);
+        glUniform1f(waveProg->getUniform("time"), glfwGetTime());
+    }
 
-		//Use the matrix stack for Lab 6
-		float aspect = width/(float)height;
+    void drawSplash(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> View, shared_ptr<MatrixStack> Projection) {
+        //draw particles
+        //set particle system camera
+        partProg->bind();
+        CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix())));
+        CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix())));
+        texture3->bind(partProg->getUniform("alphaTexture"));
+        
+        for (int i = 0; i < splashPositions.size(); i++) {
+            splashes.at(i)->setCamera(View->topMatrix());
+            
+            Model->pushMatrix();
+            Model->loadIdentity();
+            Model->translate(vec3(splashPositions.at(i)));
+            CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix())));
+            splashes.at(i)->drawMe(partProg);
+            splashes.at(i)->update();
 
-		// Create the matrix stacks - please leave these alone for now
-		auto Projection = make_shared<MatrixStack>();
-		auto View = make_shared<MatrixStack>();
-		auto Model = make_shared<MatrixStack>();
+            Model->popMatrix();
+            
+        }
+        partProg->unbind();
+    }
 
-		updateUsingCameraPath(frametime, View);
+    void render(float frametime) {
+        glTime = glfwGetTime();
+        processWASDInput();
+        checkCollisions();
+        // Get current frame buffer size.
+        int width, height;
+        glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
+        glViewport(0, 0, width, height);
 
-		// Apply perspective projection.
-		Projection->pushMatrix();
-		Projection->perspective(45.0f, aspect, 0.01f, 100.0f);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // Clear framebuffer
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// View is behind shooter
-		View->pushMatrix();
-		if (!goCamera) {
-			View->loadIdentity();
+        //Use the matrix stack for Lab 6
+        float aspect = width/(float)height;
 
+        // Create the matrix stacks - please leave these alone for now
+        auto Projection = make_shared<MatrixStack>();
+        auto View = make_shared<MatrixStack>();
+        auto Model = make_shared<MatrixStack>();
 
-			vec3 target = normalize(vec3(
-				cos(xRot) * cos(yRot), //x
-				sin(yRot), //y
-				sin(xRot) * cos(yRot))); //z
-			vec3 up = vec3(0, 1, 0);
+        updateUsingCameraPath(frametime, View);
 
-			mat4 lookAt = glm::lookAt(
-				eyePos - target, //eyepos
-				eyePos + target,
-				up); //up
-			View->multMatrix(lookAt);
+        // Apply perspective projection.
+        Projection->pushMatrix();
+        Projection->perspective(45.0f, aspect, 0.01f, 100.0f);
 
-
-			splinepath[3] = Spline(eyePos + target,
-				vec3((eyePos.x + target.x),
-					(eyePos.y + target.y + 2) / 2,
-					(eyePos.z + target.z - 1) / 2),
-				vec3(0, 2, -1), 3);
-
-		}
-
-		
+        // View is behind shooter
+        View->pushMatrix();
+        if (!goCamera) {
+            View->loadIdentity();
 
 
-		// Draw the scene
-		prog->bind();
-		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
-		glUniform3f(prog->getUniform("lightPos"), -2.0f , 2.0f, 2.0f - lightTrans);
-		//goal
-		goalRender(Model, Projection);
-		//goalie
-		goalieRender(Model);
-		//shooter
-		shooterRender(Model);
-		//ball
-		
-		//pool
-		poolRender(Model);
-		
+            vec3 target = normalize(vec3(
+                cos(xRot) * cos(yRot), //x
+                sin(yRot), //y
+                sin(xRot) * cos(yRot))); //z
+            vec3 up = vec3(0, 1, 0);
+
+            mat4 lookAt = glm::lookAt(
+                eyePos - target, //eyepos
+                eyePos + target,
+                up); //up
+            View->multMatrix(lookAt);
 
 
-		prog->unbind();
+            splinepath[3] = Spline(eyePos + target,
+                vec3((eyePos.x + target.x),
+                    (eyePos.y + target.y + 2) / 2,
+                    (eyePos.z + target.z - 1) / 2),
+                vec3(0, 2, -1), 3);
 
-		
+        }
 
-		//switch shaders to the texture mapping shader and draw the ground
-		texProg->bind();
-		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
-		glUniform3f(texProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
-		glUniform1f(texProg->getUniform("alpha"), 1.0f);
-		texture2->bind(texProg->getUniform("Texture0"));
-		glUniform1i(texProg->getUniform("flip"), 1);
-		if (ballActive) {
-			ballPhysics();
-			drawBallPhysics(Model);
-			if (ballStart + 10.0 < glfwGetTime()) {
-				ballActive = false;
-			}
-		}
-		else {
-			ballRender(Model);
-		}
-		texProg->unbind();
-		drawWater(Model, View, Projection);
-		
-		skyBoxRender(Model);
-		//drawGround(texProg);
-		
-		
+        
 
-		texProg->unbind();
-		
-		drawSplash(Model,View,Projection);
 
-		//animation update example
-		sTheta = sin((float)glfwGetTime());
-		eTheta = std::max(0.0f, (float)sin(glfwGetTime()));
-		hTheta = std::max(0.0f, (float)cos(glfwGetTime()));
-		//how fast the goalie does his animation, controlled by animSpeed.
-		shooterRot = cos(pi<double>() * glTime);
-		shooterKickSpeed = cos(2 * pi<double>() * glTime);
-		goalieTime = cos(2 * pi<double>() * glTime / animSpeed);
-		// Pop matrix stacks.
-		Projection->popMatrix();
-		View->popMatrix();
+        // Draw the scene
+        prog->bind();
+        glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+        glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
+        glUniform3f(prog->getUniform("lightPos"), -2.0f , 2.0f, 2.0f - lightTrans);
+        //goal
+        goalRender(Model, Projection);
+        //goalie
+        goalieRender(Model);
+        //shooter
+        shooterRender(Model);
+        //ball
+        
+        //pool
+        poolRender(Model);
+        
 
-	}
+
+        prog->unbind();
+
+        
+
+        //switch shaders to the texture mapping shader and draw the ground
+        texProg->bind();
+        glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+        glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
+        glUniform3f(texProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
+        glUniform1f(texProg->getUniform("alpha"), 1.0f);
+        texture2->bind(texProg->getUniform("Texture0"));
+        glUniform1i(texProg->getUniform("flip"), 1);
+        if (ballActive) {
+            ballPhysics();
+            drawBallPhysics(Model);
+            if (ballStart + 10.0 < glfwGetTime()) {
+                ballActive = false;
+            }
+        }
+        else {
+            ballRender(Model);
+        }
+        texProg->unbind();
+        drawWater(Model, View, Projection);
+        
+        skyBoxRender(Model);
+        //drawGround(texProg);
+        
+        
+
+        texProg->unbind();
+        
+        drawSplash(Model,View,Projection);
+
+        //animation update example
+        sTheta = sin((float)glfwGetTime());
+        eTheta = std::max(0.0f, (float)sin(glfwGetTime()));
+        hTheta = std::max(0.0f, (float)cos(glfwGetTime()));
+        //how fast the goalie does his animation, controlled by animSpeed.
+        shooterRot = cos(pi<double>() * glTime);
+        shooterKickSpeed = cos(2 * pi<double>() * glTime);
+        goalieTime = cos(2 * pi<double>() * glTime / animSpeed);
+        // Pop matrix stacks.
+        Projection->popMatrix();
+        View->popMatrix();
+
+    }
 };
 
 int main(int argc, char *argv[])
 {
-	srand(time(0));
-	// Where the resources are loaded from
-	std::string resourceDir = "../resources";
+    srand(time(0));
+    // Where the resources are loaded from
+    std::string resourceDir = "../resources";
 
-	if (argc >= 2)
-	{
-		resourceDir = argv[1];
-	}
+    if (argc >= 2)
+    {
+        resourceDir = argv[1];
+    }
 
-	Application *application = new Application();
+    Application *application = new Application();
 
-	// Your main will always include a similar set up to establish your window
-	// and GL context, etc.
+    // Your main will always include a similar set up to establish your window
+    // and GL context, etc.
 
-	WindowManager *windowManager = new WindowManager();
-	windowManager->init(1920, 1080);
-	windowManager->setEventCallbacks(application);
-	application->windowManager = windowManager;
+    WindowManager *windowManager = new WindowManager();
+    windowManager->init(1920, 1080);
+    windowManager->setEventCallbacks(application);
+    application->windowManager = windowManager;
 
-	// This is the code that will likely change program to program as you
-	// may need to initialize or set up different data and state
+    // This is the code that will likely change program to program as you
+    // may need to initialize or set up different data and state
 
-	application->init(resourceDir);
-	application->initGeom(resourceDir);
-	application->initTex(resourceDir);
-	auto lastTime = chrono::high_resolution_clock::now();
-	// Loop until the user closes the window.
-	while (! glfwWindowShouldClose(windowManager->getHandle()))
-	{
-		// save current time for next frame
-		auto nextLastTime = chrono::high_resolution_clock::now();
+    application->init(resourceDir);
+    application->initGeom(resourceDir);
+    application->initTex(resourceDir);
+    auto lastTime = chrono::high_resolution_clock::now();
+    // Loop until the user closes the window.
+    while (! glfwWindowShouldClose(windowManager->getHandle()))
+    {
+        // save current time for next frame
+        auto nextLastTime = chrono::high_resolution_clock::now();
 
-		// get time since last frame
-		float deltaTime =
-			chrono::duration_cast<std::chrono::microseconds>(
-				chrono::high_resolution_clock::now() - lastTime)
-			.count();
-		// convert microseconds (weird) to seconds (less weird)
-		deltaTime *= 0.000001;
+        // get time since last frame
+        float deltaTime =
+            chrono::duration_cast<std::chrono::microseconds>(
+                chrono::high_resolution_clock::now() - lastTime)
+            .count();
+        // convert microseconds (weird) to seconds (less weird)
+        deltaTime *= 0.000001;
 
-		// reset lastTime so that we can calculate the deltaTime
-		// on the next frame
-		lastTime = nextLastTime;
-		// Render scene.
-		application->render(deltaTime);
+        // reset lastTime so that we can calculate the deltaTime
+        // on the next frame
+        lastTime = nextLastTime;
+        // Render scene.
+        application->render(deltaTime);
 
-		// Swap front and back buffers.
-		glfwSwapBuffers(windowManager->getHandle());
-		// Poll for and process events.
-		glfwPollEvents();
-	}
+        // Swap front and back buffers.
+        glfwSwapBuffers(windowManager->getHandle());
+        // Poll for and process events.
+        glfwPollEvents();
+    }
 
-	// Quit program.
-	windowManager->shutdown();
-	return 0;
+    // Quit program.
+    windowManager->shutdown();
+    return 0;
 }

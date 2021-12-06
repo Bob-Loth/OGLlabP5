@@ -39,8 +39,8 @@ bool Program::init()
 	GLint rc;
 
 	// Create shader handles
-	GLuint VS = glCreateShader(GL_VERTEX_SHADER);
-	GLuint FS = glCreateShader(GL_FRAGMENT_SHADER);
+	VS = glCreateShader(GL_VERTEX_SHADER);
+	FS = glCreateShader(GL_FRAGMENT_SHADER);
 
 	// Read shader sources
 	std::string vShaderString = readFileAsString(vShaderName);
