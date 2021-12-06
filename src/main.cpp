@@ -186,6 +186,10 @@ public:
 		//ball's position, and velocity constants
 	vec3 initialBallPos = handPos;
 	vec3 ballPos = handPos;
+	int maxSplashes = 20;
+	vector<vec4> splashPositions = vector<vec4>(maxSplashes);
+	int splashPtr = 0;
+	bool doSplash = true;
 	bool firstShotRender = false;
 	vec3 ballV;
 	float ballRot;
@@ -292,15 +296,21 @@ public:
 		}
 	}
 
-	void ballPhysics(bool lobbed) {
+	void ballPhysics() {
 		
-		
+			vec3 splashPos = ballPos;
 
 			//throw the ball with high velocity, at a lower angle.
 			ballV += forceMult * g;
 			float depth = ((shooterTrans.y + 0.6) - ballPos.y);
 			if (depth > 0.0) {
 
+				//record the ball's position when it enters the water into a circular array of length maxSplashes 
+				//(limit # of active particle systems for performance reasons)
+				if (doSplash) {
+					splashPositions.at(splashPtr++ % maxSplashes) = vec4(splashPos, glfwGetTime());
+					doSplash = false;
+				}
 				ballV += forceMult * (buoyancy * (1.0f + 0.6f * depth));
 				ballV.x = 0.975 * ballV.x;
 				if (ballPos.y - (shooterTrans.y + 0.6f) < 0.05 && ballV.y < 0) {
@@ -317,6 +327,9 @@ public:
 					}
 				}
 				ballV.z = 0.975 * ballV.z;
+			}
+			else {
+				doSplash = true;
 			}
 			ballPos += ballV;
 		
@@ -1245,6 +1258,27 @@ public:
 		Model->popMatrix();
 	}
 
+	void drawSplash(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> View, shared_ptr<MatrixStack> Projection) {
+		//draw particles
+		//set particle system camera
+		
+		splash->setCamera(View->topMatrix());
+		partProg->bind();
+		texture3->bind(partProg->getUniform("alphaTexture"));
+		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix())));
+		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix())));
+
+		Model->pushMatrix();
+		Model->loadIdentity();
+		Model->translate(ballPos);
+		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix())));
+		splash->drawMe(partProg);
+		splash->update();
+
+		Model->popMatrix();
+		partProg->unbind();
+	}
+
 	void render(float frametime) {
 		glTime = glfwGetTime();
 		processWASDInput();
@@ -1299,8 +1333,7 @@ public:
 
 		}
 
-		//set particle system camera
-		splash->setCamera(View->topMatrix());
+		
 
 
 		// Draw the scene
@@ -1332,7 +1365,7 @@ public:
 		glUniform3f(texProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
 		glUniform1f(texProg->getUniform("alpha"), 1.0f);
 		if (ballActive) {
-			ballPhysics(lobbed);
+			ballPhysics();
 			drawBallPhysics(Model);
 			if (ballStart + 10.0 < glfwGetTime()) {
 				ballActive = false;
@@ -1350,22 +1383,7 @@ public:
 
 		texProg->unbind();
 		
-		//draw particles
-		partProg->bind();
-		texture3->bind(partProg->getUniform("alphaTexture"));
-		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix())));
-		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix())));
-		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix())));
-
-		Model->pushMatrix();
-		Model->loadIdentity();
-		Model->translate(vec3(0, 0, -1));
-		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix())));
-		splash->drawMe(partProg);
-		splash->update();
-
-		Model->popMatrix();
-		partProg->unbind();
+		drawSplash(Model,View,Projection);
 
 		//animation update example
 		sTheta = sin((float)glfwGetTime());

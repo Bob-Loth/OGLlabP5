@@ -84,7 +84,7 @@ void particleSys::drawMe(std::shared_ptr<Program> prog) {
   //std::cout << "Any Gl errors1: " << glGetError() << std::endl;
   glBindBuffer(GL_ARRAY_BUFFER, vertBuffObj);
   
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat), (GLvoid*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glVertexAttribDivisor(0, 1);
 	glVertexAttribDivisor(1, 1);
 
@@ -92,7 +92,7 @@ void particleSys::drawMe(std::shared_ptr<Program> prog) {
   glDrawArraysInstanced(GL_POINTS, 0, 1, numP);
 
 	glVertexAttribDivisor(0, 0);
-	glVertexAttribDivisor(1, 1);	
+	glVertexAttribDivisor(1, 0);
   //std::cout << "Any Gl errors2: " << glGetError() << std::endl;
 	glDisableVertexAttribArray(0);
 }
