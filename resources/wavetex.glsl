@@ -37,19 +37,19 @@ void main() {
   fragNor = flip * (M * vec4(vertNor, 0.0)).xyz;
   lightDir = vec3((vec4(lightPos - (M*vec4(vertPos,1.0)).xyz, 0.0)));
   
+  EPos = (M * vec4(vertPos.x,vertPos.y, vertPos.z ,1.0)).xyz;
+  float distance1 = 4/distance(EPos, splashPosition1.xyz);
+  float distance2 = 4/distance(EPos, splashPosition2.xyz);
+  float distance3 = 4/distance(EPos, splashPosition3.xyz);
+  float distance4 = 4/distance(EPos, splashPosition4.xyz);
+  float distance5 = 4/distance(EPos, splashPosition5.xyz);
 
-  float distance1 = distance(EPos, splashPosition1.xyz);
-  float distance2 = distance(EPos, splashPosition2.xyz);
-  float distance3 = distance(EPos, splashPosition3.xyz);
-  float distance4 = distance(EPos, splashPosition4.xyz);
-  float distance5 = distance(EPos, splashPosition5.xyz);
-
-  float offsetY = (
-    sin(distance1) * remaining1
-  + sin(distance2) * remaining2 
-  + sin(distance3) * remaining3
-  + sin(distance4) * remaining4 
-  + sin(distance5) * remaining5);
+  float offsetY =  0.03 * (
+    sin(0.5 * distance1) * remaining1
+  + sin(0.5 * distance2) * remaining2 
+  + sin(0.5 * distance3) * remaining3
+  + sin(0.5 * distance4) * remaining4 
+  + sin(0.5 * distance5) * remaining5);
 
   gl_Position = P * V *M * vec4(vertPos.x, vertPos.y + offsetY, vertPos.z, 1.0);
   EPos = (M * vec4(vertPos.x,vertPos.y + offsetY, vertPos.z ,1.0)).xyz;
