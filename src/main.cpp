@@ -123,6 +123,7 @@ public:
 	vector<vec3> dummyBBox;
 	shared_ptr<Shape> ball;
 	shared_ptr<Shape> sky;
+	shared_ptr<Shape> water;
 	//global data for ground plane - direct load constant defined CPU data to GPU (not obj)
 	GLuint GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj;
 	int g_GiboLen;
@@ -312,7 +313,9 @@ public:
 				//(limit # of active particle systems for performance reasons)
 				if (doSplash) {
 					splashPositions.at(splashPtr % maxSplashes) = vec4(splashPos, glfwGetTime());
-					splashes.at(splashPtr % maxSplashes)->reSet(ballV);
+					if (length(ballV) > 0.005) {
+						splashes.at(splashPtr % maxSplashes)->reSet(ballV);
+					}
 					splashPtr++;
 					doSplash = false;
 				}
@@ -658,6 +661,8 @@ public:
  		string errStr;
 		//load in the mesh and make the shape(s)
  		
+		vector<tinyobj::shape_t> TOshapesWater;
+		vector<tinyobj::material_t> objMaterialsWater;
 
 		// Initialize bunny mesh.
 		vector<tinyobj::shape_t> TOshapesB;
@@ -674,6 +679,20 @@ public:
 			ball->measure();
 			ball->init(true);
 		}
+
+		rc = tinyobj::LoadObj(TOshapesWater, objMaterialsWater, errStr, (resourceDirectory + "/heavymesh.obj").c_str());
+		if (!rc) {
+			cerr << errStr << endl;
+		}
+		else {
+
+			water = make_shared<Shape>();
+			water->createShape(TOshapesWater[0]);
+
+			water->measure();
+			water->init(true);
+		}
+
 
 		vector<tinyobj::shape_t> TOshapes3;
 		rc = tinyobj::LoadObj(TOshapes3, objMaterials, errStr, (resourceDirectory + "/dummy.obj").c_str());
