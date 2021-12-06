@@ -153,9 +153,10 @@ public:
     float gZoom = 0;
     float gCamH = 0;
     vec3 shooterTrans = vec3(0, .27, -7.3);
-    vec3 eyePos = shooterTrans + vec3(w.x, w.y + 1, w.z);
+    
     vec3 dEyePos = vec3(0, 2, 0);
     vec3 w = vec3(0, 0, 0);
+	vec3 eyePos = shooterTrans + vec3(w.x, w.y + 1, w.z);
     vec3 u = vec3(0, 0, 0);
     
     bool firstHandRender = true;
