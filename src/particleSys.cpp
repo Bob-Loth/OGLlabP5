@@ -10,7 +10,7 @@ using namespace std;
 
 particleSys::particleSys(vec3 source) {
 
-	numP = 300;	
+	numP = 30;	
 	t = 0.0f;
 	h = 0.01f;
 	g = vec3(0.0f, -0.098, 0.0f);
@@ -28,7 +28,7 @@ void particleSys::gpuSetup() {
 
 		auto particle = make_shared<Particle>(start);
 		particles.push_back(particle);
-		particle->load(start);
+		particle->load(start, vec3(0,0,0));
 
 		//To do - how can you integrate unique colors per particle?
 		pointColors[i * 3 + 0] = particles.at(i)->getColor().r;
@@ -60,9 +60,9 @@ void particleSys::gpuSetup() {
 	
 }
 
-void particleSys::reSet() {
+void particleSys::reSet(vec3 ballV) {
 	for (int i=0; i < numP; i++) {
-		particles[i]->load(start);
+		particles[i]->load(start, ballV);
 	}
 }
 

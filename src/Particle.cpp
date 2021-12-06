@@ -37,23 +37,24 @@ Particle::~Particle()
 {
 }
 
-void Particle::load(vec3 start)
+void Particle::load(vec3 start, vec3 ballV)
 {
 	// Random initialization
-	rebirth(0.0f, start);
+	rebirth(0.0f, start, ballV);
 }
 
 /* all particles born at the origin */
-void Particle::rebirth(float t, vec3 start)
+void Particle::rebirth(float t, vec3 start, vec3 ballV)
 {
+	float vMult = 70.0f;
 	charge = randFloat(0.0f, 1.0f) < 0.5 ? -1.0f : 1.0f;	
 	m = 1.0f;
   	d = randFloat(0.0f, 0.02f);
 	x = vec3(start.x, start.y, start.z);
-	v.x = randFloat(-1.0f, 1.0f);
-	v.y = 1.0f;
-	v.z = randFloat(-1.0f, 1.0f);
-	lifespan = 2.0f; 
+	v.x = randFloat(-0.0f, 1.0f) * ballV.x * vMult;
+	v.y = randFloat(0.5f, 1.5f) * -ballV.y * vMult;
+	v.z = randFloat(-0.0f, 1.0f)* ballV.z * vMult; 
+	lifespan = 5.0f; 
 	tEnd = t + lifespan;
 	scale = randFloat(1.0f, 1.0f);
    	color.r = randFloat(0.26f, 0.29f);
@@ -65,7 +66,7 @@ void Particle::rebirth(float t, vec3 start)
 void Particle::update(float t, float h, const vec3 &g, const vec3 start)
 {
 	if(t > tEnd) {
-		rebirth(t, start);
+		color.a = 0.0f;
 	}
 
 	//very simple update

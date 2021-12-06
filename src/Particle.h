@@ -27,8 +27,8 @@ class Particle
 public:
 	Particle(vec3 pos);
 	virtual ~Particle();
-	void load(vec3 start);
-	void rebirth(float t, vec3 start);
+	void load(vec3 start, vec3 ballV);
+	void rebirth(float t, vec3 start, vec3 ballV);
 	void update(float t, float h, const glm::vec3 &g, const vec3 start);
 	const vec3 &getPosition() const { return x; };
 	const vec3 &getVelocity() const { return v; };

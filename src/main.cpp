@@ -24,6 +24,9 @@
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#define GLM_SWIZZLE
+#include <glm/glm.hpp>
+
 
 using namespace std;
 using namespace glm;
@@ -108,7 +111,7 @@ public:
 
 	//particle system
 	shared_ptr<Program> partProg;
-	particleSys *splash;
+	vector<particleSys *> splashes;
 
 
 	//our geometry
@@ -308,7 +311,9 @@ public:
 				//record the ball's position when it enters the water into a circular array of length maxSplashes 
 				//(limit # of active particle systems for performance reasons)
 				if (doSplash) {
-					splashPositions.at(splashPtr++ % maxSplashes) = vec4(splashPos, glfwGetTime());
+					splashPositions.at(splashPtr % maxSplashes) = vec4(splashPos, glfwGetTime());
+					splashes.at(splashPtr % maxSplashes)->reSet(ballV);
+					splashPtr++;
 					doSplash = false;
 				}
 				ballV += forceMult * (buoyancy * (1.0f + 0.6f * depth));
@@ -532,7 +537,7 @@ public:
 		CHECKED_GL_CALL(glEnable(GL_DEPTH_TEST));
 		CHECKED_GL_CALL(glEnable(GL_BLEND));
 		CHECKED_GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-		CHECKED_GL_CALL(glPointSize(24.0f));
+		CHECKED_GL_CALL(glPointSize(4.0f));
 
 
 		// Initialize the GLSL program that we will use for local shading
@@ -614,8 +619,13 @@ public:
 		texture3->setUnit(3);
 		texture3->setWrapModes(GL_REPEAT, GL_REPEAT);
 
-		splash = new particleSys(vec3(0, 0, 0));
-		splash->gpuSetup();
+		for (size_t i = 0; i < maxSplashes; i++)
+		{
+			particleSys* splash = new particleSys(vec3(0, 0, 0));
+			splash->gpuSetup();
+			splashes.push_back(splash);
+		}
+		
 
 		//spline paths
 		splinepath[0] = Spline(eyePos, 
@@ -1261,21 +1271,24 @@ public:
 	void drawSplash(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> View, shared_ptr<MatrixStack> Projection) {
 		//draw particles
 		//set particle system camera
-		
-		splash->setCamera(View->topMatrix());
 		partProg->bind();
-		texture3->bind(partProg->getUniform("alphaTexture"));
 		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix())));
 		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix())));
+		texture3->bind(partProg->getUniform("alphaTexture"));
+		
+		for (int i = 0; i < splashPositions.size(); i++) {
+			splashes.at(i)->setCamera(View->topMatrix());
+			
+			Model->pushMatrix();
+			Model->loadIdentity();
+			Model->translate(vec3(splashPositions.at(i)));
+			CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix())));
+			splashes.at(i)->drawMe(partProg);
+			splashes.at(i)->update();
 
-		Model->pushMatrix();
-		Model->loadIdentity();
-		Model->translate(ballPos);
-		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix())));
-		splash->drawMe(partProg);
-		splash->update();
-
-		Model->popMatrix();
+			Model->popMatrix();
+			
+		}
 		partProg->unbind();
 	}
 

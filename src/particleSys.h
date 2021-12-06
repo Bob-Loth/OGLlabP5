@@ -36,8 +36,8 @@ private:
 	ParticleSorter sorter;
 
 	//this is not great that this is hard coded - you can make it better
-	GLfloat points[900];
-	float pointColors[900];
+	GLfloat points[90];
+	float pointColors[90];
 	
 
 	mat4 theCamera;
@@ -51,7 +51,7 @@ public:
 	void drawMe(std::shared_ptr<Program> prog);
 	void gpuSetup();
 	void update();
-	void reSet();
+	void reSet(vec3 ballV);
 	void setCamera(mat4 inC) {theCamera = inC;}
 };
 
