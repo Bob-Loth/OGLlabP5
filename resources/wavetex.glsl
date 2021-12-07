@@ -20,6 +20,7 @@ uniform vec3 splashForce3;
 uniform vec3 splashForce4;
 uniform vec3 splashForce5;
 
+uniform float waveSize;
 
 uniform vec3 ballV;
 uniform float time;
@@ -56,11 +57,11 @@ void main() {
   float distance4 = distance(EPos, splashPosition4.xyz);
   float distance5 = distance(EPos, splashPosition5.xyz);
 
-  float propagationAdjust1 = 0.7/distance1 * sin(pi * remaining1/lifespan);
-  float propagationAdjust2 = 0.7/distance2 * sin(pi * remaining2/lifespan);
-  float propagationAdjust3 = 0.7/distance3 * sin(pi * remaining3/lifespan);
-  float propagationAdjust4 = 0.7/distance4 * sin(pi * remaining4/lifespan);
-  float propagationAdjust5 = 0.7/distance5 * sin(pi * remaining5/lifespan);
+  float propagationAdjust1 = waveSize/distance1 * sin(pi * remaining1/lifespan);
+  float propagationAdjust2 = waveSize/distance2 * sin(pi * remaining2/lifespan);
+  float propagationAdjust3 = waveSize/distance3 * sin(pi * remaining3/lifespan);
+  float propagationAdjust4 = waveSize/distance4 * sin(pi * remaining4/lifespan);
+  float propagationAdjust5 = waveSize/distance5 * sin(pi * remaining5/lifespan);
   
   float wavelength = 4.0f;
   float offsetY1 = length(splashForce1) * sin(wavelength * distance1 * remaining1) * propagationAdjust1;

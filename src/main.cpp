@@ -112,7 +112,7 @@ public:
     //particle system
     shared_ptr<Program> partProg;
     vector<particleSys *> splashes;
-
+	float waveSize = 1.0;
     //wave shader
     shared_ptr<Program> waveProg;
     //our geometry
@@ -436,21 +436,15 @@ public:
         }
         //adjust xy sensitivity
         if (key == GLFW_KEY_EQUAL && action == GLFW_PRESS) {
-            xSensitivity *= 2;
-            ySensitivity *= 2;
+            waveSize *= 1.5;
 
         }
         if (key == GLFW_KEY_MINUS && action == GLFW_PRESS) {
-            xSensitivity /= 2;
-            ySensitivity /= 2;
+            waveSize /= 1.5;
         }
         //start/stop animation
         if (key == GLFW_KEY_G && action == GLFW_RELEASE) {
             goCamera = !goCamera;
-        }
-        if (key == GLFW_KEY_MINUS && action == GLFW_PRESS) {
-            xSensitivity /= 2;
-            ySensitivity /= 2;
         }
         if (key == GLFW_KEY_C && action == GLFW_PRESS) {
             movementSensitivity /= 2;
@@ -605,6 +599,7 @@ public:
 		waveProg->addUniform("splashForce5");		
 		waveProg->addUniform("ballV");
         waveProg->addUniform("time");
+		waveProg->addUniform("waveSize");
         waveProg->addAttribute("vertPos");
         waveProg->addAttribute("vertNor");
         waveProg->addAttribute("vertTex");
@@ -620,8 +615,10 @@ public:
         partProg->addUniform("M");
         partProg->addUniform("V");
         partProg->addUniform("alphaTexture");
+		
         partProg->addAttribute("vertPos");
         partProg->addAttribute("pColor");
+
         if (!partProg->init())
         {
             std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
@@ -1348,6 +1345,7 @@ public:
         glUniform4f(waveProg->getUniform("splashPosition4"), splashPositions[3].x, splashPositions[3].y, splashPositions[3].z, splashPositions[3].a);
         glUniform4f(waveProg->getUniform("splashPosition5"), splashPositions[4].x, splashPositions[4].y, splashPositions[4].z, splashPositions[4].a);
         glUniform1f(waveProg->getUniform("time"), glfwGetTime());
+		glUniform1f(waveProg->getUniform("waveSize"), waveSize);
 		glUniform3f(waveProg->getUniform("splashForce1"), splashForces[0].x, splashForces[0].y, splashForces[0].z);
         glUniform3f(waveProg->getUniform("splashForce2"), splashForces[1].x, splashForces[1].y, splashForces[1].z);
         glUniform3f(waveProg->getUniform("splashForce3"), splashForces[2].x, splashForces[2].y, splashForces[2].z);
