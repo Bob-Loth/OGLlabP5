@@ -8,6 +8,12 @@
 
 using namespace std;
 
+float particleSys::randFloat(float l, float h)
+{
+	float r = rand() / (float) RAND_MAX;
+	return (1.0f - r) * l + r * h;
+}
+
 particleSys::particleSys(vec3 source) {
 
 	numP = 300;	
@@ -122,10 +128,19 @@ void particleSys::update() {
   //go through all the particles and update the CPU buffer
    for (int i = 0; i < numP; i++) {
         pos = particles[i]->getPosition();
-        col = particles[i]->getColor();
+        float whiteVal = randFloat(0.20f, 0.80f);
+   	  col.r = whiteVal;
+   	  col.g = whiteVal;
+   	  col.b = randFloat(0.93f, 0.99f);
+	    col.a = randFloat(0.3f, 1.0f);
+        //col = particles[i]->getColor();
         points[i*3+0] =pos.x; 
         points[i*3+1] =pos.y; 
         points[i*3+2] =pos.z;
+
+        pointColors[i*3+0] = col.r;
+        pointColors[i*3+1] = col.g;
+        pointColors[i*3+2] = col.b;
   } 
 
   //update the GPU data

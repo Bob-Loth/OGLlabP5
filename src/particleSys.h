@@ -48,6 +48,7 @@ private:
 	
 public:
 	particleSys(vec3 source);
+	float randFloat(float l, float h);
 	void drawMe(std::shared_ptr<Program> prog);
 	void gpuSetup();
 	void update();

@@ -56,13 +56,13 @@ void main() {
   float distance4 = distance(EPos, splashPosition4.xyz);
   float distance5 = distance(EPos, splashPosition5.xyz);
 
-  float propagationAdjust1 = 1/distance1 * sin(pi * remaining1/lifespan);
-  float propagationAdjust2 = 1/distance2 * sin(pi * remaining2/lifespan);
-  float propagationAdjust3 = 1/distance3 * sin(pi * remaining3/lifespan);
-  float propagationAdjust4 = 1/distance4 * sin(pi * remaining4/lifespan);
-  float propagationAdjust5 = 1/distance5 * sin(pi * remaining5/lifespan);
+  float propagationAdjust1 = 0.7/distance1 * sin(pi * remaining1/lifespan);
+  float propagationAdjust2 = 0.7/distance2 * sin(pi * remaining2/lifespan);
+  float propagationAdjust3 = 0.7/distance3 * sin(pi * remaining3/lifespan);
+  float propagationAdjust4 = 0.7/distance4 * sin(pi * remaining4/lifespan);
+  float propagationAdjust5 = 0.7/distance5 * sin(pi * remaining5/lifespan);
   
-  float wavelength = 2.0f;
+  float wavelength = 4.0f;
   float offsetY1 = length(splashForce1) * sin(wavelength * distance1 * remaining1) * propagationAdjust1;
   float offsetY2 = length(splashForce2) * sin(wavelength * distance2 * remaining2) * propagationAdjust2;
   float offsetY3 = length(splashForce3) * sin(wavelength * distance3 * remaining3) * propagationAdjust3;

@@ -70,10 +70,7 @@ void Particle::rebirth(float t, vec3 start, vec3 ballV)
 
 void Particle::update(float t, float h, const vec3 &g, const vec3 start)
 {
-	if(t > tEnd) {
-		color.a = 0.0f;
-	}
-
+	
 	//very simple update
 	x += h * v;
 	v += h * g * 10.0f;
