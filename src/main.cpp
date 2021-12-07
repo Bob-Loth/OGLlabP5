@@ -443,9 +443,9 @@ public:
             waveSize /= 1.5;
         }
         //start/stop animation
-        if (key == GLFW_KEY_G && action == GLFW_RELEASE) {
-            goCamera = !goCamera;
-        }
+        //if (key == GLFW_KEY_G && action == GLFW_RELEASE) {
+        //    goCamera = !goCamera;
+        //}
         if (key == GLFW_KEY_C && action == GLFW_PRESS) {
             movementSensitivity /= 2;
             
