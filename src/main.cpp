@@ -194,6 +194,7 @@ public:
     vec3 ballPos = handPos;
     int maxSplashes = 5;
     vector<vec4> splashPositions = vector<vec4>(maxSplashes);
+	vector<vec3> splashForces = vector<vec3>(maxSplashes);
     int splashPtr = 0;
     bool doSplash = true;
     bool firstShotRender = false;
@@ -313,8 +314,9 @@ public:
 
                 //record the ball's position when it enters the water into a circular array of length maxSplashes 
                 //(limit # of active particle systems for performance reasons)
-                if (doSplash) {
+                if (doSplash && length(ballV) > 0.03) {
                     splashPositions.at(splashPtr % maxSplashes) = vec4(splashPos, glfwGetTime());
+					splashForces.at(splashPtr % maxSplashes) = ballV;
                     if (length(ballV) > 0.005) {
                         splashes.at(splashPtr % maxSplashes)->reSet(ballV);
                     }
@@ -596,6 +598,12 @@ public:
         waveProg->addUniform("splashPosition3");
         waveProg->addUniform("splashPosition4");
         waveProg->addUniform("splashPosition5");
+		waveProg->addUniform("splashForce1");		
+		waveProg->addUniform("splashForce2");
+		waveProg->addUniform("splashForce3");
+		waveProg->addUniform("splashForce4");
+		waveProg->addUniform("splashForce5");		
+		waveProg->addUniform("ballV");
         waveProg->addUniform("time");
         waveProg->addAttribute("vertPos");
         waveProg->addAttribute("vertNor");
@@ -1340,6 +1348,12 @@ public:
         glUniform4f(waveProg->getUniform("splashPosition4"), splashPositions[3].x, splashPositions[3].y, splashPositions[3].z, splashPositions[3].a);
         glUniform4f(waveProg->getUniform("splashPosition5"), splashPositions[4].x, splashPositions[4].y, splashPositions[4].z, splashPositions[4].a);
         glUniform1f(waveProg->getUniform("time"), glfwGetTime());
+		glUniform3f(waveProg->getUniform("splashForce1"), splashForces[0].x, splashForces[0].y, splashForces[0].z);
+        glUniform3f(waveProg->getUniform("splashForce2"), splashForces[1].x, splashForces[1].y, splashForces[1].z);
+        glUniform3f(waveProg->getUniform("splashForce3"), splashForces[2].x, splashForces[2].y, splashForces[2].z);
+        glUniform3f(waveProg->getUniform("splashForce4"), splashForces[3].x, splashForces[3].y, splashForces[3].z);
+        glUniform3f(waveProg->getUniform("splashForce5"), splashForces[4].x, splashForces[4].y, splashForces[4].z);
+        
     }
 
     void drawSplash(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> View, shared_ptr<MatrixStack> Projection) {
