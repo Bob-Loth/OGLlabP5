@@ -1446,18 +1446,11 @@ public:
         goalieRender(Model);
         //shooter
         shooterRender(Model);
-        //ball
-        
         //pool
         poolRender(Model);
-        
-
-
         prog->unbind();
 
-        
-
-        //switch shaders to the texture mapping shader and draw the ground
+        //switch shaders to the texture mapping shader and draw the water and the ball
         texProg->bind();
         glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
         glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
@@ -1481,10 +1474,8 @@ public:
         skyBoxRender(Model);
         //drawGround(texProg);
         
-        
-
         texProg->unbind();
-        
+        //draw the splashes (particle effects)
         drawSplash(Model,View,Projection);
 
         //animation update example
@@ -1498,7 +1489,6 @@ public:
         // Pop matrix stacks.
         Projection->popMatrix();
         View->popMatrix();
-
     }
 };
 
