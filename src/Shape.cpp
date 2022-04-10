@@ -163,7 +163,7 @@ void Shape::init(bool textured)
 void Shape::draw(const shared_ptr<Program> prog) const
 {
 	int h_pos, h_nor, h_tex;
-	h_pos = h_nor = h_tex = -1;
+	h_tex = -1;
 
 	CHECKED_GL_CALL(glBindVertexArray(vaoID));
 

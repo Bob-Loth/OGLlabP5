@@ -31,6 +31,7 @@
 using namespace std;
 using namespace glm;
 
+
 void resize_obj(std::vector<tinyobj::shape_t>& shapes) {
     float minX, minY, minZ;
     float maxX, maxY, maxZ;
@@ -56,7 +57,7 @@ void resize_obj(std::vector<tinyobj::shape_t>& shapes) {
     }
 
     //From min and max compute necessary scale and shift for each dimension
-    float maxExtent, xExtent, yExtent, zExtent;
+    float maxExtent = 0.0, xExtent, yExtent, zExtent;
     xExtent = maxX - minX;
     yExtent = maxY - minY;
     zExtent = maxZ - minZ;
@@ -92,7 +93,6 @@ void resize_obj(std::vector<tinyobj::shape_t>& shapes) {
     }
 }
 
-
 class Application : public EventCallbacks
 {
 
@@ -109,22 +109,11 @@ public:
     //Our shader program for textures
     std::shared_ptr<Program> texProg;
 
-    //particle system
-    shared_ptr<Program> partProg;
-    vector<particleSys *> splashes;
-	float waveSize = 1.0;
-    //wave shader
-    shared_ptr<Program> waveProg;
-    //our geometry
-    shared_ptr<Shape> goal;
-    shared_ptr<vector<Shape>> pool = make_shared<vector<Shape>>();
-    vector<vec3> poolBBox;
     shared_ptr<Shape> sphere;
     shared_ptr<vector<Shape>> dummy = make_shared<vector<Shape>>();
     vector<vec3> dummyBBox;
     shared_ptr<Shape> ball;
     shared_ptr<Shape> sky;
-    shared_ptr<Shape> water;
     //global data for ground plane - direct load constant defined CPU data to GPU (not obj)
     GLuint GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj;
     int g_GiboLen;
@@ -140,7 +129,7 @@ public:
     //water splash
     shared_ptr<Texture> texture3;
 
-    
+    float cumulativeFrametime = 0.0f;
 
     //global data (larger program should be encapsulated)
     vec3 gMin;
@@ -166,17 +155,13 @@ public:
     //animation data
     float lightTrans = 0;
     float gTrans = -3;
-    float sTheta = 0;
-    float eTheta = 0;
-    float hTheta = 0;
     shared_ptr<MatrixStack> rHandAnchor;
-    float animSpeed = 2;
+    
     int numThrows = 0;
     float goalieTime = 0;
     float shooterRot = 0;
     float shooterKickSpeed = 0;
     bool goalieColor = true;
-    double glTime = 0;
     //where the ball starts from on the z axis
     float currX = 0.0f, currY = 0.0f, currZ = 0.0f;
     float z0 = 9.0;
@@ -187,7 +172,7 @@ public:
     float forceMult = 0.0001;
     vec3 g = vec3(0.0f, -1.98f, 0.0f);
     vec3 buoyancy = vec3(0, 1.98f, 0.0f);
-        //ball's position, and velocity constants
+    //ball's position, and velocity constants
     vec3 initialBallPos = handPos;
     vec3 ballPos = handPos;
     int maxSplashes = 5;
@@ -372,17 +357,8 @@ public:
         if (key == GLFW_KEY_Z && action == GLFW_RELEASE) {
             glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
         }
-        //adjust xy sensitivity
-        if (key == GLFW_KEY_EQUAL && action == GLFW_PRESS) {
-            waveSize *= 1.5;
-
-        }
-        if (key == GLFW_KEY_MINUS && action == GLFW_PRESS) {
-            waveSize /= 1.5;
-        }
         if (key == GLFW_KEY_C && action == GLFW_PRESS) {
             movementSensitivity /= 2;
-            
         }
         if (key == GLFW_KEY_V && action == GLFW_PRESS) {
             movementSensitivity *= 2;
@@ -441,23 +417,17 @@ public:
         //update gaze and cameraRight vectors w and u
         w = -normalize(vec3(cos(xRot) * cos(yRot), sin(yRot), sin(xRot) * cos(yRot)));
         u = cross(w, vec3(0, 1, 0));
-        
     }
 
-    void scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
-    {
-
+    void scrollCallback(GLFWwindow* window, double deltaX, double deltaY){
     }
 
 
-    void resizeCallback(GLFWwindow *window, int width, int height)
-    {
+    void resizeCallback(GLFWwindow *window, int width, int height){
         glViewport(0, 0, width, height);
     }
 
-    void init
-    
-    (const std::string& resourceDirectory)
+    void init(const std::string& resourceDirectory)
     {
         GLSL::checkVersion();
         glfwSetInputMode(windowManager->getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -596,7 +566,7 @@ public:
     void initGround() {
 
         float g_groundSize = 20;
-        float g_groundY = 1.00;
+        float g_groundY = 0.00;
 
         // A x-z plane at y = g_groundY of dimension [-g_groundSize, g_groundSize]^2
         float GrndPos[] = {
@@ -798,14 +768,10 @@ public:
             dummy->at(i).draw(prog);
         }
         //draw right leg
-        
-        
         shooterLegRender(Model, true);
         
         //draw left leg
-        
         shooterLegRender(Model, false);
-        
         
         //draw the upper body
             Model->pushMatrix();
@@ -1029,14 +995,12 @@ public:
         skyBoxRender(Model);
         drawGround(texProg);
 
-        //animation update example
-        sTheta = sin((float)glfwGetTime());
-        eTheta = std::max(0.0f, (float)sin(glfwGetTime()));
-        hTheta = std::max(0.0f, (float)cos(glfwGetTime()));
-        //how fast the goalie does his animation, controlled by animSpeed.
-        shooterRot = cos(pi<double>() * glTime);
-        shooterKickSpeed = cos(2 * pi<double>() * glTime);
-        goalieTime = cos(2 * pi<double>() * glTime / animSpeed);
+        
+        //how fast the shooter does his animation
+        cumulativeFrametime += frametime;
+
+        shooterRot = cos(pi<double>() * cumulativeFrametime);
+        shooterKickSpeed = cos(2 * pi<double>() * cumulativeFrametime);
         // Pop matrix stacks.
         Projection->popMatrix();
         View->popMatrix();
