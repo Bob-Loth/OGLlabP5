@@ -521,7 +521,9 @@ public:
         glViewport(0, 0, width, height);
     }
 
-    void init(const std::string& resourceDirectory)
+    void init
+    
+    (const std::string& resourceDirectory)
     {
         GLSL::checkVersion();
         glfwSetInputMode(windowManager->getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);

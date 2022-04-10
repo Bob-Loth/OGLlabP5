@@ -119,6 +119,9 @@ void checkVersion()
 		printf("This shader example will not work due to the installed Opengl version, which is %d.%d.\n", major, minor);
 		exit(0);
 	}
+	
+	printf("Opengl version %d.%d\n", major, minor);
+	
 }
 
 GLint getAttribLocation(const GLuint program, const char varname[], bool verbose)
