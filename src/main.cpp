@@ -140,9 +140,7 @@ public:
     //water splash
     shared_ptr<Texture> texture3;
 
-    //spline/bezier camera data
-    bool goCamera = false;
-    Spline splinepath[4];
+    
 
     //global data (larger program should be encapsulated)
     vec3 gMin;
@@ -152,7 +150,7 @@ public:
     float gTilt = 0;
     float gZoom = 0;
     float gCamH = 0;
-    vec3 shooterTrans = vec3(0, .27, -7.3);
+    vec3 shooterTrans = vec3(0, 0, -7.3);
     
     vec3 dEyePos = vec3(0, 2, 0);
     vec3 w = vec3(0, 0, 0);
@@ -196,7 +194,6 @@ public:
     vector<vec4> splashPositions = vector<vec4>(maxSplashes);
 	vector<vec3> splashForces = vector<vec3>(maxSplashes);
     int splashPtr = 0;
-    bool doSplash = true;
     bool firstShotRender = false;
     vec3 ballV;
     float ballRot;
@@ -261,91 +258,32 @@ public:
     }
 
     void checkCollisions() {
-        Shape poolBox = pool->at(1);
-        //if shooter has moved past max or min x of poolBox
-        if (shooterTrans.x >= poolBox.max.x * 12 - 0.3) {
-            shooterTrans.x = poolBox.max.x * 12 - 0.3;
-        }
-        if (shooterTrans.x <= poolBox.min.x * 12 + 0.3) {
-            shooterTrans.x = poolBox.min.x * 12 + 0.3;
-        }
-        //if shooter has moved past max or min y of poolBox
-        if (shooterTrans.z >= poolBox.max.z * 12 - 9.5) {
-            shooterTrans.z = poolBox.max.z * 12 - 9.5;
-        }
-        if (shooterTrans.z <= poolBox.min.z * 12 - 4) {
-            shooterTrans.z = poolBox.min.z * 12 - 4;
-        }
-        eyePos = shooterTrans + vec3(w.x, w.y + 1, w.z);
-
-        //if ball has moved past max or min of poolBox, not counting the extra space allowed to make a goal.
-        if (ballPos.x >= poolBox.max.x * 12 - 0.3) {
-            ballPos.x -= 0.025;
-            ballV = 0.7f * vec3(-ballV.x, ballV.y, ballV.z);
-        }
-        if (ballPos.x <= poolBox.min.x * 12 + 0.3) {
-            ballPos.x += 0.025;
-            ballV = 0.7f * vec3(-ballV.x, ballV.y, ballV.z);
-        }
-
-        if (ballPos.y <= poolBox.max.y * 12 + 0.75) {
-            ballPos.y += 0.025;
-            ballV = 0.1f * ballV;
-        }
         
-        if (ballPos.z >= poolBox.max.z * 12 - 9.5) {
-            ballPos.z -= 0.025;
-            ballV = 0.7f * vec3(ballV.x, ballV.y, -ballV.z);
-        }
-        if (ballPos.z <= poolBox.min.z * 12 - 6) {
-            ballPos.z +=  0.025;
-            ballV = 0.7f * vec3(ballV.x, ballV.y, -ballV.z);
-        }
     }
 
     void ballPhysics() {
-        
-            vec3 splashPos = ballPos;
-
-            //throw the ball with high velocity, at a lower angle.
-            ballV += forceMult * g;
-            float depth = ((shooterTrans.y + 0.6) - ballPos.y);
-            if (depth > 0.0) {
-
-                //record the ball's position when it enters the water into a circular array of length maxSplashes 
-                //(limit # of active particle systems for performance reasons)
-                if (doSplash && length(ballV) > 0.03) {
-                    splashPositions.at(splashPtr % maxSplashes) = vec4(splashPos, glfwGetTime());
-					splashForces.at(splashPtr % maxSplashes) = ballV;
-                    if (length(ballV) > 0.005) {
-                        splashes.at(splashPtr % maxSplashes)->reSet(ballV);
-                    }
-                    splashPtr++;
-                    doSplash = false;
+        //throw the ball with high velocity, at a lower angle.
+        ballV += forceMult * g;
+        float depth = -ballPos.y; //depth is positive if below 0 height.
+        if (depth > 0.0) {
+            ballV += forceMult * (buoyancy * (1.0f + 0.6f * depth));
+            ballV.x = 0.975 * ballV.x;
+            if (ballPos.y - (shooterTrans.y + 0.6f) < 0.05 && ballV.y < 0) {
+                
+                if (length(vec3(ballV.x, 0.0f, ballV.z)) > 0.04) {
+                    cout << length(vec3(ballV.x, 0.0f, ballV.z)) << " > " << 0.04 << endl;
+                    ballV.y = -ballV.y;
+                    ballV.x *= 0.925;
+                    ballV.z *= 0.925;
+                    ballPos.y += 0.005;
                 }
-                ballV += forceMult * (buoyancy * (1.0f + 0.6f * depth));
-                ballV.x = 0.975 * ballV.x;
-                if (ballPos.y - (shooterTrans.y + 0.6f) < 0.05 && ballV.y < 0) {
-                    
-                    if (length(vec3(ballV.x, 0.0f, ballV.z)) > 0.04) {
-                        cout << length(vec3(ballV.x, 0.0f, ballV.z)) << " > " << 0.04 << endl;
-                        ballV.y = -ballV.y;
-                        ballV.x *= 0.925;
-                        ballV.z *= 0.925;
-                        ballPos.y += 0.005;
-                    }
-                    else {
-                        ballV.y = 0.975 * ballV.y;
-                    }
+                else {
+                    ballV.y = 0.975 * ballV.y;
                 }
-                ballV.z = 0.975 * ballV.z;
             }
-            else {
-                doSplash = true;
-            }
-            ballPos += ballV;
-        
-        
+            ballV.z = 0.975 * ballV.z;
+        }
+        ballPos += ballV;
     }
 
     void drawBallPhysics(shared_ptr<MatrixStack> Model) {
@@ -442,10 +380,6 @@ public:
         if (key == GLFW_KEY_MINUS && action == GLFW_PRESS) {
             waveSize /= 1.5;
         }
-        //start/stop animation
-        //if (key == GLFW_KEY_G && action == GLFW_RELEASE) {
-        //    goCamera = !goCamera;
-        //}
         if (key == GLFW_KEY_C && action == GLFW_PRESS) {
             movementSensitivity /= 2;
             
@@ -492,22 +426,22 @@ public:
             mousePrevY = posY;
             firstMouse = false;
         }
-        if (!goCamera) { //don't register changes in mouse movement during the camera translation
-            //do stuff with current and previous values
-            deltaMouseX = posX - mousePrevX;
-            deltaMouseY = mousePrevY - posY;
-            xRot += xSensitivity * deltaMouseX;
-            yRot += ySensitivity * deltaMouseY;
-            //cap
-            if (yRot > glm::radians(80.0f)) yRot = glm::radians(80.0f);
-            if (yRot < -glm::radians(80.0f)) yRot = -glm::radians(80.0f);
-            //set the previous values
-            mousePrevX = posX;
-            mousePrevY = posY;
-            //update gaze and cameraRight vectors w and u
-            w = -normalize(vec3(cos(xRot) * cos(yRot), sin(yRot), sin(xRot) * cos(yRot)));
-            u = cross(w, vec3(0, 1, 0));
-        }
+        
+        //do stuff with current and previous values
+        deltaMouseX = posX - mousePrevX;
+        deltaMouseY = mousePrevY - posY;
+        xRot += xSensitivity * deltaMouseX;
+        yRot += ySensitivity * deltaMouseY;
+        //cap
+        if (yRot > glm::radians(80.0f)) yRot = glm::radians(80.0f);
+        if (yRot < -glm::radians(80.0f)) yRot = -glm::radians(80.0f);
+        //set the previous values
+        mousePrevX = posX;
+        mousePrevY = posY;
+        //update gaze and cameraRight vectors w and u
+        w = -normalize(vec3(cos(xRot) * cos(yRot), sin(yRot), sin(xRot) * cos(yRot)));
+        u = cross(w, vec3(0, 1, 0));
+        
     }
 
     void scrollCallback(GLFWwindow* window, double deltaX, double deltaY)
@@ -576,56 +510,7 @@ public:
         texProg->addAttribute("vertNor");
         texProg->addAttribute("vertTex");
 
-        //initialize experimental wave shader
-        waveProg = make_shared<Program>();
-        waveProg->setVerbose(false);
-        waveProg->setShaderNames(resourceDirectory + "/wavetex.glsl", resourceDirectory + "/wavefrag.glsl");
-        waveProg->init();
-        waveProg->addUniform("P");
-        waveProg->addUniform("V");
-        waveProg->addUniform("M");
-        waveProg->addUniform("Texture0");
-        waveProg->addUniform("alpha");
-        waveProg->addUniform("lightPos");
-        waveProg->addUniform("flip");
-        //stupid way of doing this, but I couldn't get uniform arrays to work.
-        waveProg->addUniform("splashPosition1");
-        waveProg->addUniform("splashPosition2");
-        waveProg->addUniform("splashPosition3");
-        waveProg->addUniform("splashPosition4");
-        waveProg->addUniform("splashPosition5");
-		waveProg->addUniform("splashForce1");		
-		waveProg->addUniform("splashForce2");
-		waveProg->addUniform("splashForce3");
-		waveProg->addUniform("splashForce4");
-		waveProg->addUniform("splashForce5");		
-		waveProg->addUniform("ballV");
-        waveProg->addUniform("time");
-		waveProg->addUniform("waveSize");
-        waveProg->addAttribute("vertPos");
-        waveProg->addAttribute("vertNor");
-        waveProg->addAttribute("vertTex");
 
-        // Initialize particle shader
-        partProg = make_shared<Program>();
-        partProg->setVerbose(false);
-        partProg->setShaderNames(
-            resourceDirectory + "/lab10_vert.glsl",
-            resourceDirectory + "/lab10_frag.glsl");
-        partProg->init();
-        partProg->addUniform("P");
-        partProg->addUniform("M");
-        partProg->addUniform("V");
-        partProg->addUniform("alphaTexture");
-		
-        partProg->addAttribute("vertPos");
-        partProg->addAttribute("pColor");
-
-        if (!partProg->init())
-        {
-            std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
-            exit(1);
-        }
         //read in and load the texture
         texture0 = make_shared<Texture>();
         texture0->setFilename(resourceDirectory + "/water.jpg");
@@ -646,40 +531,6 @@ public:
         texture2->init();
         texture2->setUnit(2);
         texture2->setWrapModes(GL_REPEAT, GL_REPEAT);
-
-        //water splash particle texture
-        texture3 = make_shared<Texture>();
-        texture3->setFilename(resourceDirectory + "/alpha.bmp");
-        texture3->init();
-        texture3->setUnit(3);
-        texture3->setWrapModes(GL_REPEAT, GL_REPEAT);
-
-        for (size_t i = 0; i < maxSplashes; i++)
-        {
-            particleSys* splash = new particleSys(vec3(0, 0, 0));
-            splash->gpuSetup();
-            splashes.push_back(splash);
-        }
-        
-
-        //spline paths
-        splinepath[0] = Spline(eyePos, 
-            vec3(eyePos.x / 2, (eyePos.y + 2) / 2, eyePos.z / 2), 
-            vec3(0, 2, 0), 5);
-        splinepath[1] = Spline(vec3(0, 2, 0), vec3(0, 2, -5), vec3(0, 1, -5), handPos, 5);
-        splinepath[2] = Spline(handPos,
-            vec3((handPos.x + goalTrans.x) / 2, ((handPos.y + goalTrans.y) / 2) + 1, (handPos.z + goalTrans.z) / 2),
-            vec3(goalTrans.x, goalTrans.y, goalTrans.z), 2);
-        vec3 target = normalize(vec3(
-            cos(xRot) * cos(yRot), //x
-            sin(yRot), //y
-            sin(xRot) * cos(yRot))); //z
-        //parameterized lookAt
-        splinepath[3] = Spline(eyePos + target, 
-            vec3((eyePos.x + target.x),
-                (eyePos.y + target.y + 2)/2,
-                (eyePos.z + target.z - 1)/2), 
-            vec3(0,2,-1), 5);
     }
 
     void initGeom(const std::string& resourceDirectory)
@@ -688,54 +539,35 @@ public:
         // Initialize mesh
         // Load geometry
         // Some obj files contain material information.We'll ignore them for this assignment.
-        vector<tinyobj::shape_t> TOshapes;
-        vector<tinyobj::material_t> objMaterials;
         string errStr;
         //load in the mesh and make the shape(s)
-        
-        vector<tinyobj::shape_t> TOshapesWater;
-        vector<tinyobj::material_t> objMaterialsWater;
 
         // Initialize ball mesh.
-        vector<tinyobj::shape_t> TOshapesB;
-        vector<tinyobj::material_t> objMaterialsB;
+        vector<tinyobj::shape_t> TOshapesBall;
+        vector<tinyobj::material_t> objMaterials;
         //load in the mesh and make the shape(s)
-        bool rc = tinyobj::LoadObj(TOshapesB, objMaterialsB, errStr, (resourceDirectory + "/ballTex.obj").c_str(), (resourceDirectory + "untitled.mtl").c_str());
+        bool rc = tinyobj::LoadObj(TOshapesBall, objMaterials, errStr, (resourceDirectory + "/ballTex.obj").c_str(), (resourceDirectory + "untitled.mtl").c_str());
         if (!rc) {
             cerr << errStr << endl;
         } else {
             
             ball = make_shared<Shape>();
-            ball->createShape(TOshapesB[0]);
+            ball->createShape(TOshapesBall[0]);
 
             ball->measure();
             ball->init(true);
         }
 
-        rc = tinyobj::LoadObj(TOshapesWater, objMaterialsWater, errStr, (resourceDirectory + "/heavymesh.obj").c_str());
+        vector<tinyobj::shape_t> TOshapesDummy;
+        rc = tinyobj::LoadObj(TOshapesDummy, objMaterials, errStr, (resourceDirectory + "/dummy.obj").c_str());
         if (!rc) {
             cerr << errStr << endl;
         }
         else {
 
-            water = make_shared<Shape>();
-            water->createShape(TOshapesWater[0]);
-
-            water->measure();
-            water->init(true);
-        }
-
-
-        vector<tinyobj::shape_t> TOshapes3;
-        rc = tinyobj::LoadObj(TOshapes3, objMaterials, errStr, (resourceDirectory + "/dummy.obj").c_str());
-        if (!rc) {
-            cerr << errStr << endl;
-        }
-        else {
-
-            for (size_t i = 0; i < TOshapes3.size(); ++i) {
+            for (size_t i = 0; i < TOshapesDummy.size(); ++i) {
                 Shape s;
-                s.createShape(TOshapes3[i]);
+                s.createShape(TOshapesDummy[i]);
                 dummy->push_back(s);
                 dummy->at(i).measure();
                 dummy->at(i).init(false);
@@ -743,50 +575,18 @@ public:
             }
             dummyBBox = getMultiShapeBBox(dummy);
         }
-        vector<tinyobj::shape_t> TOshapes5;
-        rc = tinyobj::LoadObj(TOshapes5, objMaterials, errStr, (resourceDirectory + "/Hockey Gates model.obj").c_str());
-        resize_obj(TOshapes5);
-        if (!rc) {
-            cerr << errStr << endl;
-        }
-        else {
-            goal = make_shared<Shape>();
-            
-            goal->createShape(TOshapes5[0]);
-            goal->measure();
-            goal->init(false);
-        }
-        vector<tinyobj::shape_t> TOshapes7;
-        rc = tinyobj::LoadObj(TOshapes7, objMaterials, errStr, (resourceDirectory + "/sphereTex.obj").c_str());
-        resize_obj(TOshapes7);
+        
+        vector<tinyobj::shape_t> TOshapesSkybox;
+        rc = tinyobj::LoadObj(TOshapesSkybox, objMaterials, errStr, (resourceDirectory + "/sphereTex.obj").c_str());
+        resize_obj(TOshapesSkybox);
         if (!rc) {
             cerr << errStr << endl;
         }
         else {
             sky = make_shared<Shape>();
-            sky->createShape(TOshapes7[0]);
+            sky->createShape(TOshapesSkybox[0]);
             sky->measure();
             sky->init(true);
-        }
-        vector<tinyobj::shape_t> TOshapes6;
-        rc = tinyobj::LoadObj(TOshapes6, objMaterials, errStr, (resourceDirectory + "/pool.obj").c_str());
-        resize_obj(TOshapes6);
-        if (!rc) {
-            cerr << errStr << endl;
-        }
-        else {
-            for (size_t i = 0; i < TOshapes6.size(); ++i) {
-                Shape s;
-                s.createShape(TOshapes6[i]);
-                
-                s.reverseNormals();
-                pool->push_back(s);
-                pool->at(i).measure();
-                pool->at(i).init(false);
-
-            }
-            
-            poolBBox = getMultiShapeBBox(pool);
         }
         //code to load in the ground plane (CPU defined data passed to GPU)
         initGround();
@@ -853,9 +653,8 @@ public:
         glUniform1i(curS->getUniform("flip"), 1);
         texture0->bind(curS->getUniform("Texture0"));
         //draw the ground plane 
-        mat4 Trans = glm::translate(glm::mat4(1.0f), vec3(0,-0.15,0));
         mat4 ScaleS = glm::scale(glm::mat4(1.0f), vec3(0.15,1,0.6));
-        mat4 ctm = Trans * ScaleS;
+        mat4 ctm = ScaleS;
         glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
 
         glEnableVertexAttribArray(0);
@@ -943,58 +742,6 @@ public:
 
     void setModel(std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack>M) {
         glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
-    }
-
-    void updateUsingCameraPath(float frametime, std::shared_ptr<MatrixStack> View) {
-        if (goCamera) {
-            View->loadIdentity();
-            View->lookAt(eyePos, goalTrans, vec3(0, 1, 0));
-            vec3 lookAt = vec3(View->topMatrix()[2]);
-            xRot = -atan(lookAt.z, lookAt.x);
-            yRot = asin(lookAt.y);
-            firstMouse = true;
-            
-            if (!splinepath[0].isDone()) {
-                
-                splinepath[0].updateWithPolling(frametime, Spline(dEyePos,
-                    vec3(dEyePos.x / 2, (dEyePos.y + 2) / 2, dEyePos.z / 2),
-                    vec3(0, 2, 0), 5));
-                eyePos = splinepath[0].getPosition();
-                splinepath[3].update(frametime);
-                View->loadIdentity();
-                View->lookAt(eyePos, splinepath[3].getPosition(), vec3(0, 1, 0));
-                
-                vec3 lookAt = vec3(View->topMatrix()[2]);
-                xRot = -atan(lookAt.z, lookAt.x);
-                yRot = asin(lookAt.y);
-            }
-
-            else if (!splinepath[1].isDone()) {
-                splinepath[1].updateWithPolling(frametime,
-                    Spline(vec3(0, 2, 0), vec3(0, 2, -5), vec3(0, 1, -5), handPos, 5));
-                eyePos = splinepath[1].getPosition();
-                
-            }
-            else if (!splinepath[2].isDone()){
-                //parameterize position between just right of goal, and the first-rendered position of the ball (to avoid wobbling based on ball's current position)
-                splinepath[2].updateWithPolling(frametime,
-                    Spline(handPos, 
-                        vec3((handPos.x + goalTrans.x + 0.5) / 2, ((handPos.y + goalTrans.y) / 2) + 1, (handPos.z + goalTrans.z) / 2),
-                        vec3(goalTrans.x + 0.5, goalTrans.y, goalTrans.z), 2));
-                eyePos = splinepath[2].getPosition();
-            }
-            else {
-                goCamera = false;
-            }
-        }
-        else {
-            for (int i = 0; i < 3; i++) {
-                splinepath[i].reset();
-            }
-        }
-        //update gaze and cameraRight vectors w and u
-        w = -normalize(vec3(cos(xRot) * cos(yRot), sin(yRot), sin(xRot) * cos(yRot)));
-        u = cross(w, vec3(0, 1, 0));
     }
 
     void shooterLegRender(shared_ptr<MatrixStack> Model, bool isRight) {
@@ -1208,180 +955,9 @@ public:
             Model->popMatrix();
         Model->popMatrix();
     }
-    
-
-    void goalieRender(std::shared_ptr<MatrixStack> Model) {
-        Model->pushMatrix();
-        if (goalieColor) {
-            glUniform3f(prog->getUniform("MatAmb"), 0.020f, 0.065f, 0.020f);
-            glUniform3f(prog->getUniform("MatDif"), 0.2f, 0.65f, 0.2f);
-            glUniform3f(prog->getUniform("MatSpec"), 0.2f, 0.65f, 0.2f);
-            glUniform1f(prog->getUniform("MatShine"), 200.0f);
-        }
-        else {
-            glUniform3f(prog->getUniform("MatAmb"), 0.085f, 0.085f, 0.020f);
-            glUniform3f(prog->getUniform("MatDif"), 0.85f, 0.85f, 0.2f);
-            glUniform3f(prog->getUniform("MatSpec"), 0.85f, 0.85f, 0.2f);
-            glUniform1f(prog->getUniform("MatShine"), 200.0f);
-        }
-        Model->loadIdentity();
-        //get the whole thing into position
-        Model->translate(vec3(0, .27 + 0.04 * goalieTime, -9.3));
-        Model->rotate(pi<float>() / 2, vec3(-1, 0, 0));
-        Model->rotate(pi<float>() / 2, vec3(0, 0, -1));
-        Model->scale(0.0050f);
-        setModel(prog, Model);
-        //draw torso and below
-        for (size_t i = 0; i < 15; ++i) {
-            dummy->at(i).draw(prog);
-        }
-        //draw neck and head with same transforms as lower body
-        dummy->at(27).draw(prog);
-        dummy->at(28).draw(prog);
-
-        //right side
-        goalieArmRender(Model, 15, 1);
-
-        //left side
-        goalieArmRender(Model, 21, -1);
-        Model->popMatrix();
-    }
-
-    void goalieArmRender(std::shared_ptr<MatrixStack> Model, int armIndex, int mirror) {
-        Model->pushMatrix();
-        vec3 pivotTorso = getCenterOfBBox(dummy->at(14));
-        Model->translate(vec3(0, mirror * (1 * goalieTime + 5), 3 * goalieTime));
-        setModel(prog, Model);
-        dummy->at(armIndex).draw(prog);
-        Model->pushMatrix();
-        vec3 rShoulder = getCenterOfBBox(dummy->at(armIndex));
-        Model->translate(rShoulder); //center of shoulder
-        Model->rotate((pi<float>() / 4) * goalieTime - (pi<float>() / 8), vec3(mirror * -1, 0, 0));
-        Model->translate(-rShoulder);
-        setModel(prog, Model);
-        dummy->at(armIndex + 1).draw(prog);
-        dummy->at(armIndex + 2).draw(prog);
-
-        Model->pushMatrix();
-        vec3 rElbow = getCenterOfBBox(dummy->at(armIndex + 2));
-        Model->translate(rElbow); //center of shoulder
-        Model->rotate((pi<float>() / 6) * goalieTime - (pi<float>() / 16), vec3(mirror * -1, 0, 0));
-        Model->translate(-rElbow);
-        setModel(prog, Model);
-        setModel(prog, Model);
-        dummy->at(armIndex + 3).draw(prog);
-        dummy->at(armIndex + 4).draw(prog);
-        Model->pushMatrix();
-        vec3 rWrist = getCenterOfBBox(dummy->at(armIndex + 4));
-        Model->translate(rWrist); //center of shoulder
-        Model->rotate(pi<float>() / 2, vec3(0, -1, 0));
-        Model->translate(-rWrist);
-        setModel(prog, Model);
-        dummy->at(armIndex + 5).draw(prog);
-        Model->popMatrix();
-        Model->popMatrix();
-        Model->popMatrix();
-        Model->popMatrix();
-    }
-
-    void goalRender(std::shared_ptr<MatrixStack> Model, std::shared_ptr<MatrixStack> Projection) {
-        Model->pushMatrix();
-        SetMaterial(prog, 5);
-        Model->loadIdentity();
-        Model->translate(goalTrans);
-        Model->scale(vec3(.72, .54, .6));
-        setModel(prog, Model);
-        goal->draw(prog);
-        
-        Model->popMatrix();
-    }
-
-    void poolRender(std::shared_ptr<MatrixStack> Model) {
-        Model->pushMatrix();
-        SetMaterial(prog, 3);
-        Model->loadIdentity();
-        Model->translate(vec3(0, 2, 0));
-        Model->rotate(pi<float>(), vec3(0, 1, 0));
-        Model->scale(vec3(12, 12, 12));
-        setModel(prog, Model);
-        for (size_t i = 0; i < pool->size(); ++i) {
-            if (i == 1) {
-                continue; //don't draw the water
-            }
-            if (i <= 1) {
-                SetMaterial(prog, 3);
-            }
-            else {
-                SetMaterial(prog, 4);
-            }
-            pool->at(i).draw(prog);
-        }
-        Model->popMatrix();
-    }
-
-    void drawWater(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> View, shared_ptr<MatrixStack> Projection){
-        waveProg->bind();
-        glUniformMatrix4fv(waveProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-        glUniformMatrix4fv(waveProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
-        glUniform3f(waveProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
-        glUniform1f(waveProg->getUniform("alpha"), 0.5f);
-        texture0->bind(waveProg->getUniform("Texture0"));
-        glUniform1i(waveProg->getUniform("flip"), 1);
-
-        sendWaveData();
-
-        Model->pushMatrix();
-        Model->loadIdentity();
-        Model->translate(vec3(0.0f,0.85f,-4.0f));
-        Model->scale(vec3(3.0f, 1.0f, 8.0f));
-        setModel(waveProg, Model);
-        water->draw(waveProg);
-        Model->popMatrix();
-        waveProg->unbind();
-    }
-
-    void sendWaveData() {
-        glUniform4f(waveProg->getUniform("splashPosition1"), splashPositions[0].x, splashPositions[0].y, splashPositions[0].z, splashPositions[0].a);
-        glUniform4f(waveProg->getUniform("splashPosition2"), splashPositions[1].x, splashPositions[1].y, splashPositions[1].z, splashPositions[1].a);
-        glUniform4f(waveProg->getUniform("splashPosition3"), splashPositions[2].x, splashPositions[2].y, splashPositions[2].z, splashPositions[2].a);
-        glUniform4f(waveProg->getUniform("splashPosition4"), splashPositions[3].x, splashPositions[3].y, splashPositions[3].z, splashPositions[3].a);
-        glUniform4f(waveProg->getUniform("splashPosition5"), splashPositions[4].x, splashPositions[4].y, splashPositions[4].z, splashPositions[4].a);
-        glUniform1f(waveProg->getUniform("time"), glfwGetTime());
-		glUniform1f(waveProg->getUniform("waveSize"), waveSize);
-		glUniform3f(waveProg->getUniform("splashForce1"), splashForces[0].x, splashForces[0].y, splashForces[0].z);
-        glUniform3f(waveProg->getUniform("splashForce2"), splashForces[1].x, splashForces[1].y, splashForces[1].z);
-        glUniform3f(waveProg->getUniform("splashForce3"), splashForces[2].x, splashForces[2].y, splashForces[2].z);
-        glUniform3f(waveProg->getUniform("splashForce4"), splashForces[3].x, splashForces[3].y, splashForces[3].z);
-        glUniform3f(waveProg->getUniform("splashForce5"), splashForces[4].x, splashForces[4].y, splashForces[4].z);
-        
-    }
-
-    void drawSplash(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> View, shared_ptr<MatrixStack> Projection) {
-        //draw particles
-        //set particle system camera
-        partProg->bind();
-        CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix())));
-        CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix())));
-        texture3->bind(partProg->getUniform("alphaTexture"));
-        
-        for (int i = 0; i < splashPositions.size(); i++) {
-            splashes.at(i)->setCamera(View->topMatrix());
-            
-            Model->pushMatrix();
-            Model->loadIdentity();
-            Model->translate(vec3(splashPositions.at(i)));
-            CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix())));
-            splashes.at(i)->drawMe(partProg);
-            splashes.at(i)->update();
-
-            Model->popMatrix();
-            
-        }
-        partProg->unbind();
-    }
 
     void render(float frametime) {
-        glTime = glfwGetTime();
+        
         processWASDInput();
         checkCollisions();
         // Get current frame buffer size.
@@ -1393,7 +969,6 @@ public:
         // Clear framebuffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //Use the matrix stack for Lab 6
         float aspect = width/(float)height;
 
         // Create the matrix stacks - please leave these alone for now
@@ -1401,63 +976,34 @@ public:
         auto View = make_shared<MatrixStack>();
         auto Model = make_shared<MatrixStack>();
 
-        updateUsingCameraPath(frametime, View);
-
         // Apply perspective projection.
         Projection->pushMatrix();
         Projection->perspective(45.0f, aspect, 0.01f, 100.0f);
 
         // View is behind shooter
         View->pushMatrix();
-        if (!goCamera) {
-            View->loadIdentity();
-
-
-            vec3 target = normalize(vec3(
-                cos(xRot) * cos(yRot), //x
-                sin(yRot), //y
-                sin(xRot) * cos(yRot))); //z
-            vec3 up = vec3(0, 1, 0);
-
-            mat4 lookAt = glm::lookAt(
-                eyePos - target, //eyepos
-                eyePos + target,
-                up); //up
-            View->multMatrix(lookAt);
-
-
-            splinepath[3] = Spline(eyePos + target,
-                vec3((eyePos.x + target.x),
-                    (eyePos.y + target.y + 2) / 2,
-                    (eyePos.z + target.z - 1) / 2),
-                vec3(0, 2, -1), 3);
-
-        }
-
         
-
+        View->loadIdentity();
+        vec3 target = normalize(vec3(
+            cos(xRot) * cos(yRot), //x
+            sin(yRot), //y
+            sin(xRot) * cos(yRot))); //z
+        vec3 up = vec3(0, 1, 0);
+        mat4 lookAt = glm::lookAt(
+            eyePos - target, //eyepos
+            eyePos + target,
+            up); //up
+        View->multMatrix(lookAt);
 
         // Draw the scene
         prog->bind();
         glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
         glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
         glUniform3f(prog->getUniform("lightPos"), -2.0f , 2.0f, 2.0f - lightTrans);
-        //goal
-        goalRender(Model, Projection);
-        //goalie
-        goalieRender(Model);
+        
         //shooter
         shooterRender(Model);
-        //ball
-        
-        //pool
-        poolRender(Model);
-        
-
-
         prog->unbind();
-
-        
 
         //switch shaders to the texture mapping shader and draw the ground
         texProg->bind();
@@ -1478,16 +1024,10 @@ public:
             ballRender(Model);
         }
         texProg->unbind();
-        drawWater(Model, View, Projection);
+        
         
         skyBoxRender(Model);
-        //drawGround(texProg);
-        
-        
-
-        texProg->unbind();
-        
-        drawSplash(Model,View,Projection);
+        drawGround(texProg);
 
         //animation update example
         sTheta = sin((float)glfwGetTime());
