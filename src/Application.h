@@ -49,12 +49,8 @@ public:
 
     //global data (larger program should be encapsulated)
     glm::vec3 gMin;
-    bool debug = true;
     float xRot = glm::radians(-90.0f), yRot = 0;
     int wState = GLFW_RELEASE, aState = GLFW_RELEASE, sState = GLFW_RELEASE, dState = GLFW_RELEASE;
-    float gTilt = 0;
-    float gZoom = 0;
-    float gCamH = 0;
     glm::vec3 shooterTrans = glm::vec3(0, 0, -7.3);
     
     glm::vec3 dEyePos = glm::vec3(0, 2, 0);
@@ -70,38 +66,7 @@ public:
     
     //animation data
     float lightTrans = 0;
-    float gTrans = -3;
-    std::shared_ptr<MatrixStack> rHandAnchor;
     
-    int numThrows = 0;
-    float goalieTime = 0;
-    float shooterRot = 0;
-    float shooterKickSpeed = 0;
-    bool goalieColor = true;
-    //where the ball starts from on the z axis
-    float currX = 0.0f, currY = 0.0f, currZ = 0.0f;
-    float z0 = 9.0;
-
-    
-    //ball and water physics data
-        //forces
-    float forceMult = 0.0001;
-    glm::vec3 g = glm::vec3(0.0f, -1.98f, 0.0f);
-    glm::vec3 buoyancy = glm::vec3(0, 1.98f, 0.0f);
-    //ball's position, and velocity constants
-    glm::vec3 initialBallPos = handPos;
-    glm::vec3 ballPos = handPos;
-    bool firstShotRender = false;
-    glm::vec3 ballV;
-    float ballRot;
-    float vFast = 4.0f;
-    float vSlow = 1.0f;
-    bool ballActive = false;
-    bool lobbed = false;
-    double ballStart = 0.0;
-    glm::vec3 ballW;
-
-    glm::vec3 CameraPos;
     bool isWASDPressed[4] = { false, false, false, false };
     glm::vec3 getCenterOfBBox(Shape s) {
         return glm::vec3(
@@ -116,7 +81,6 @@ public:
         BBox.push_back(glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX));
         BBox.push_back(glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
 
-        
         for (size_t i = 0; i < shapes->size(); ++i) {
             //x
             if (shapes->at(i).min.x < BBox.at(0).x) BBox.at(0).x = shapes->at(i).min.x;
@@ -130,90 +94,20 @@ public:
         }
         return BBox;
     }
-
+    
+    //helps with smoother camera movement
     virtual void processWASDInput();
+    //does nothing by default
+    virtual void checkCollisions(){};
 
-    virtual void checkCollisions() = 0;
-
-    virtual void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods){
-        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        {
-            glfwSetWindowShouldClose(window, GL_TRUE);
-        }
-        
-        
-        if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-            isWASDPressed[0] = true;
-            //eyePos -= movementSensitivity * w;
-        }
-        
-        if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-            isWASDPressed[1] = true;
-            //eyePos += movementSensitivity * u;
-        }
-        if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-            isWASDPressed[2] = true;
-            //eyePos += movementSensitivity * w;
-        }
-
-        if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-            isWASDPressed[3] = true;
-            //eyePos -= movementSensitivity * u;
-        }
-
-        if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
-            isWASDPressed[0] = false;
-        }
-
-        if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
-            isWASDPressed[1] = false;
-        }
-        if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
-            isWASDPressed[2] = false;
-        }
-
-        if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
-            isWASDPressed[3] = false;
-        }
-
-        //move light
-        if (key == GLFW_KEY_Q && action == GLFW_PRESS){
-            lightTrans += 1.f;
-        }
-        if (key == GLFW_KEY_E && action == GLFW_PRESS){
-            lightTrans -= 1.f;
-        }
-        //change color of goalie
-        if (key == GLFW_KEY_M && action == GLFW_PRESS) {
-            goalieColor = false;
-        }
-        if (key == GLFW_KEY_M && action == GLFW_RELEASE) {
-            goalieColor = true;
-        }
-        //wireframe
-        if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
-            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-        }
-        if (key == GLFW_KEY_Z && action == GLFW_RELEASE) {
-            glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-        }
-        if (key == GLFW_KEY_C && action == GLFW_PRESS) {
-            movementSensitivity /= 2;
-        }
-        if (key == GLFW_KEY_V && action == GLFW_PRESS) {
-            movementSensitivity *= 2;
-        }
-    }
-
-    virtual void mouseCallback(GLFWwindow *window, int button, int action, int mods){}
-
+    virtual void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) = 0;
+    virtual void mouseCallback(GLFWwindow *window, int button, int action, int mods) = 0;
     virtual void mouseMovementCallback(GLFWwindow* window, double posX, double posY);
-
-    virtual void scrollCallback(GLFWwindow* window, double deltaX, double deltaY){
-    }
-
+    //by default, does nothing
+    virtual void scrollCallback(GLFWwindow* window, double deltaX, double deltaY){}
     virtual void resizeCallback(GLFWwindow *window, int width, int height){ glViewport(0, 0, width, height); }
 
+    //setup functions, usually called once before render
     virtual void init(const std::string& resourceDirectory) = 0;
     virtual void initGeom(const std::string& resourceDirectory) = 0;
     virtual void initTex(const std::string& resourceDirectory) = 0;
@@ -222,50 +116,7 @@ public:
     //code to draw the ground plane
     virtual void drawGround(std::shared_ptr<Program> curS);
 
-     //helper function to pass material data to the GPU
-    virtual void SetMaterial(std::shared_ptr<Program> curS, int i) {
-
-        switch (i) {
-            case 0: //
-                glUniform3f(curS->getUniform("MatAmb"), 0.096f, 0.046f, 0.095f);
-                glUniform3f(curS->getUniform("MatDif"), 0.96f, 0.46f, 0.95f);
-                glUniform3f(curS->getUniform("MatSpec"), 0.45f, 0.23f, 0.45f);
-                glUniform1f(curS->getUniform("MatShine"), 120.0f);
-            break;
-            case 1: //
-                glUniform3f(curS->getUniform("MatAmb"), 0.063f, 0.038f, 0.1f);
-                glUniform3f(curS->getUniform("MatDif"), 0.63f, 0.38f, 1.0f);
-                glUniform3f(curS->getUniform("MatSpec"), 0.3f, 0.2f, 0.5f);
-                glUniform1f(curS->getUniform("MatShine"), 4.0f);
-            break;
-            case 2: //
-                glUniform3f(curS->getUniform("MatAmb"), 0.004f, 0.05f, 0.09f);
-                glUniform3f(curS->getUniform("MatDif"), 0.04f, 0.5f, 0.9f);
-                glUniform3f(curS->getUniform("MatSpec"), 0.02f, 0.25f, 0.45f);
-                glUniform1f(curS->getUniform("MatShine"), 27.9f);
-            break;
-            case 3:
-                glUniform3f(prog->getUniform("MatAmb"), 0.09f, 0.09f, 0.09f);
-                glUniform3f(prog->getUniform("MatDif"), 0.2f, 0.2f, 0.65f);
-                glUniform3f(prog->getUniform("MatSpec"), 0.2f, 0.65f, 0.2f);
-                glUniform1f(prog->getUniform("MatShine"), 120.0f);
-            break;
-            case 4:
-                glUniform3f(prog->getUniform("MatAmb"), 0.095f, 0.095f, 0.095f);
-                glUniform3f(prog->getUniform("MatDif"), 0.90f, 0.90f, 0.9f);
-                glUniform3f(prog->getUniform("MatSpec"), 0.40f, 0.40f, 0.90f);
-                glUniform1f(prog->getUniform("MatShine"), 16.0f);
-            break;
-            case 5:
-                glUniform3f(prog->getUniform("MatAmb"), 0.095f, 0.095f, 0.095f);
-                glUniform3f(prog->getUniform("MatDif"), 0.40f, 0.40f, 0.4f);
-                glUniform3f(prog->getUniform("MatSpec"), 0.40f, 0.40f, 0.40f);
-                glUniform1f(prog->getUniform("MatShine"), 16000.0f);
-                break;
-        }
-    }
-
-    /* helper function to set model trasnforms */
+    /* helper function to set model transforms */
     void SetModel(glm::vec3 trans, float rotY, float rotX, float sc, std::shared_ptr<Program> curS);
     void setModel(std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack>M);
     void resize_obj(std::vector<tinyobj::shape_t>& shapes);

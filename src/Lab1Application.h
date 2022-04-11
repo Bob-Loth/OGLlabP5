@@ -19,8 +19,8 @@ class Lab1Application : public Application
 {
 public:
     void mouseCallback(GLFWwindow *window, int button, int action, int mods);
-    
-    void ballPhysics();
+    void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+    void updateBallPhysics();
     void drawBallPhysics(std::shared_ptr<MatrixStack> Model);
     void ballRender(std::shared_ptr<MatrixStack> Model);
     
@@ -40,8 +40,36 @@ public:
     void initTex(const std::string& resourceDirectory);
     void render(float frametime);
     
+private:
+    //general physics data
+    typedef struct Physics {
+        float FORCE_MULT = 0.0001f;
+        glm::vec3 g = glm::vec3(0.0f, -1.98f, 0.0f);
+        glm::vec3 buoyancy = -g;
+    }Physics;
+    Physics physics;
+    
+    //ball's position, and velocity constants
+    typedef struct BallPhysics {
+        glm::vec3 pos = glm::vec3(0); //hand pos
+        glm::vec3 v;
+        float rot;
+        bool firstShotRender = false;
+        bool isActive = false;
+        bool lobbed = false;
+        double timeSinceThrown = 0.0;
+    }BallPhysics;
+    BallPhysics ballPhysics;
+    
+    typedef struct ShooterAnim{
+        float rot = 0;
+        float kickSpeed = 0;
+        std::shared_ptr<MatrixStack> rHandAnchor;
+    }ShooterAnim;
+    ShooterAnim shooterAnim;
 };
 
+    
 
 
 

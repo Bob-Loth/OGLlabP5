@@ -71,11 +71,11 @@ void Lab1Application::render(float frametime) {
     glUniform1f(texProg->getUniform("alpha"), 1.0f);
     texture2->bind(texProg->getUniform("Texture0"));
     glUniform1i(texProg->getUniform("flip"), 1);
-    if (ballActive) {
-        ballPhysics();
+    if (ballPhysics.isActive) {
+        updateBallPhysics();
         drawBallPhysics(Model);
-        if (ballStart + 10.0 < glfwGetTime()) {
-            ballActive = false;
+        if (ballPhysics.timeSinceThrown + 10.0 < cumulativeFrametime) {
+            ballPhysics.isActive = false;
         }
     }
     else {
@@ -91,8 +91,8 @@ void Lab1Application::render(float frametime) {
     //how fast the shooter does his animation
     cumulativeFrametime += frametime;
 
-    shooterRot = cos(pi<double>() * cumulativeFrametime);
-    shooterKickSpeed = cos(2 * pi<double>() * cumulativeFrametime);
+    shooterAnim.rot = cos(pi<double>() * cumulativeFrametime);
+    shooterAnim.kickSpeed = cos(2 * pi<double>() * cumulativeFrametime);
     // Pop matrix stacks.
     Projection->popMatrix();
     View->popMatrix();
@@ -104,51 +104,114 @@ void Lab1Application::mouseCallback(GLFWwindow *window, int button, int action, 
 
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
-        lobbed = false;
+        ballPhysics.lobbed = false;
         
     }
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        lobbed = true;
+        ballPhysics.lobbed = true;
     }
 
     if (action == GLFW_PRESS) {
-        ballPos = vec3(rHandAnchor->topMatrix()[3][0], rHandAnchor->topMatrix()[3][1], rHandAnchor->topMatrix()[3][2]);
+        ballPhysics.pos = vec3(shooterAnim.rHandAnchor->topMatrix()[3][0], shooterAnim.rHandAnchor->topMatrix()[3][1], shooterAnim.rHandAnchor->topMatrix()[3][2]);
 
-        firstShotRender = true;
-        ballActive = true;
-        if (lobbed) {
-            ballV = forceMult * 300 * -vec3(w.x, w.y - 1, w.z);
+        ballPhysics.firstShotRender = true;
+        ballPhysics.isActive = true;
+        if (ballPhysics.lobbed) {
+            ballPhysics.v = physics.FORCE_MULT * 300 * -vec3(w.x, w.y - 1, w.z);
         }
         else {
-            ballV = forceMult * 500 * -vec3(w.x, w.y - 0.5, w.z);
+            ballPhysics.v = physics.FORCE_MULT * 500 * -vec3(w.x, w.y - 0.5, w.z);
         }
-        ballStart = glfwGetTime();
+        ballPhysics.timeSinceThrown = cumulativeFrametime;
     }
 }
 
-void Lab1Application::ballPhysics() {
+void Lab1Application::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods){
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    {
+        glfwSetWindowShouldClose(window, GL_TRUE);
+    }
+    
+    
+    if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+        isWASDPressed[0] = true;
+        //eyePos -= movementSensitivity * w;
+    }
+    
+    if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+        isWASDPressed[1] = true;
+        //eyePos += movementSensitivity * u;
+    }
+    if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+        isWASDPressed[2] = true;
+        //eyePos += movementSensitivity * w;
+    }
+
+    if (key == GLFW_KEY_D && action == GLFW_PRESS) {
+        isWASDPressed[3] = true;
+        //eyePos -= movementSensitivity * u;
+    }
+
+    if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
+        isWASDPressed[0] = false;
+    }
+
+    if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
+        isWASDPressed[1] = false;
+    }
+    if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
+        isWASDPressed[2] = false;
+    }
+
+    if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
+        isWASDPressed[3] = false;
+    }
+
+    //move light
+    if (key == GLFW_KEY_Q && action == GLFW_PRESS){
+        lightTrans += 1.f;
+    }
+    if (key == GLFW_KEY_E && action == GLFW_PRESS){
+        lightTrans -= 1.f;
+    }
+    //wireframe
+    if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    }
+    if (key == GLFW_KEY_Z && action == GLFW_RELEASE) {
+        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    }
+    if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+        movementSensitivity /= 2;
+    }
+    if (key == GLFW_KEY_V && action == GLFW_PRESS) {
+        movementSensitivity *= 2;
+    }
+}
+
+void Lab1Application::updateBallPhysics() {
     //throw the ball with high velocity, at a lower angle.
-    ballV += forceMult * g;
-    float depth = -ballPos.y; //depth is positive if below 0 height.
+    ballPhysics.v += physics.FORCE_MULT * physics.g;
+    float depth = -ballPhysics.pos.y; //depth is positive if below 0 height.
     if (depth > 0.0) {
-        ballV += forceMult * (buoyancy * (1.0f + 0.6f * depth));
-        ballV.x = 0.975 * ballV.x;
-        if (ballPos.y - (shooterTrans.y + 0.6f) < 0.05 && ballV.y < 0) {
+        ballPhysics.v += physics.FORCE_MULT * (physics.buoyancy * (1.0f + 0.6f * depth));
+        ballPhysics.v.x = 0.975 * ballPhysics.v.x;
+        if (ballPhysics.pos.y - (shooterTrans.y + 0.6f) < 0.05 && ballPhysics.v.y < 0) {
             
-            if (length(vec3(ballV.x, 0.0f, ballV.z)) > 0.04) {
-                ballV.y = -ballV.y;
-                ballV.x *= 0.925;
-                ballV.z *= 0.925;
-                ballPos.y += 0.005;
+            if (length(vec3(ballPhysics.v.x, 0.0f, ballPhysics.v.z)) > 0.04) {
+                ballPhysics.v.y = -ballPhysics.v.y;
+                ballPhysics.v.x *= 0.925;
+                ballPhysics.v.z *= 0.925;
+                ballPhysics.pos.y += 0.005;
             }
             else {
-                ballV.y = 0.975 * ballV.y;
+                ballPhysics.v.y = 0.975 * ballPhysics.v.y;
             }
         }
-        ballV.z = 0.975 * ballV.z;
+        ballPhysics.v.z = 0.975 * ballPhysics.v.z;
     }
-    ballPos += ballV;
+    ballPhysics.pos += ballPhysics.v;
 }
 
 void Lab1Application::drawBallPhysics(std::shared_ptr<MatrixStack> Model) {
@@ -159,14 +222,14 @@ void Lab1Application::drawBallPhysics(std::shared_ptr<MatrixStack> Model) {
 
     Model->pushMatrix();
     
-    if (firstShotRender) {
-        ballPos = vec3(rHandAnchor->topMatrix()[3][0], rHandAnchor->topMatrix()[3][1], rHandAnchor->topMatrix()[3][2]);
-        firstShotRender = false;
+    if (ballPhysics.firstShotRender) {
+        ballPhysics.pos = vec3(shooterAnim.rHandAnchor->topMatrix()[3][0], shooterAnim.rHandAnchor->topMatrix()[3][1], shooterAnim.rHandAnchor->topMatrix()[3][2]);
+        ballPhysics.firstShotRender = false;
     }
-    Model->translate(ballPos);
+    Model->translate(ballPhysics.pos);
     Model->scale(0.08f);
-    ballRot += 2*length(ballV);
-    Model->rotate(ballRot, cross(vec3(0, 1, 0), ballV));
+    ballPhysics.rot += 2*length(ballPhysics.v);
+    Model->rotate(ballPhysics.rot, cross(vec3(0, 1, 0), ballPhysics.v));
     setModel(texProg, Model);
     ball->draw(texProg);
     
@@ -184,7 +247,7 @@ void Lab1Application::shooterLegRender(std::shared_ptr<MatrixStack> Model, bool 
     Model->pushMatrix();
         vec3 pivotRPelvis = getCenterOfBBox(dummy->at(5 + offset));
         Model->translate(pivotRPelvis);
-        Model->rotate(flip * 0.5 * shooterKickSpeed, vec3(0, 1, 0));
+        Model->rotate(flip * 0.5 * shooterAnim.kickSpeed, vec3(0, 1, 0));
         Model->translate(-pivotRPelvis);
         setModel(prog, Model);
         dummy->at(4 + offset).draw(prog);
@@ -192,7 +255,7 @@ void Lab1Application::shooterLegRender(std::shared_ptr<MatrixStack> Model, bool 
         Model->pushMatrix();
             vec3 pivotRKnee = getCenterOfBBox(dummy->at(3 + offset));
             Model->translate(pivotRKnee);
-            Model->rotate(flip * 0.25 * shooterKickSpeed + pi<float>() / 8, vec3(0, 1, 0));
+            Model->rotate(flip * 0.25 * shooterAnim.kickSpeed + pi<float>() / 8, vec3(0, 1, 0));
             Model->translate(-pivotRKnee);
             setModel(prog, Model);
             dummy->at(2 + offset).draw(prog);
@@ -236,8 +299,8 @@ void Lab1Application::shooterRender(std::shared_ptr<MatrixStack> Model) {
         Model->pushMatrix();
             vec3 pivotBelly = getCenterOfBBox(dummy->at(13));
             Model->translate(pivotBelly);
-            Model->rotate(0.5*shooterRot, vec3(0, 0, 1));
-            Model->rotate(0.2*shooterRot, vec3(0, 1, 0));
+            Model->rotate(0.5*shooterAnim.rot, vec3(0, 0, 1));
+            Model->rotate(0.2*shooterAnim.rot, vec3(0, 1, 0));
             Model->translate(-pivotBelly);
             setModel(prog, Model);
             dummy->at(14).draw(prog);
@@ -249,8 +312,8 @@ void Lab1Application::shooterRender(std::shared_ptr<MatrixStack> Model) {
             Model->pushMatrix();
                 vec3 pivotNeck = getCenterOfBBox(dummy->at(27));
                 Model->translate(pivotNeck);
-                Model->rotate(0.5*shooterRot, vec3(0, 0, -1));
-                Model->rotate(0.2 * shooterRot, vec3(0, -1, 0));
+                Model->rotate(0.5*shooterAnim.rot, vec3(0, 0, -1));
+                Model->rotate(0.2 * shooterAnim.rot, vec3(0, -1, 0));
                 Model->translate(-pivotNeck);
                 setModel(prog, Model);
                 for (size_t i = 27; i < dummy->size(); i++) {
@@ -264,7 +327,7 @@ void Lab1Application::shooterRender(std::shared_ptr<MatrixStack> Model) {
 void Lab1Application::shooterRightArmRender(std::shared_ptr<MatrixStack> Model) {
     int mirror = 1;
     int armIndex = 15;
-    float shoulderRot = shooterRot;
+    float shoulderRot = shooterAnim.rot;
     float elbowRot = cos(2 * pi<double>());
     Model->pushMatrix();
         vec3 pivotTorso = getCenterOfBBox(dummy->at(14));
@@ -294,11 +357,11 @@ void Lab1Application::shooterRightArmRender(std::shared_ptr<MatrixStack> Model) 
                     Model->pushMatrix();
                     vec3 rWrist = getCenterOfBBox(dummy->at(armIndex + 4));
                     Model->translate(rWrist); //center of wrist
-                    Model->rotate(-0.5*pi<float>()/2*shooterRot +  pi<float>() / 2, vec3(0, -1, 0));
+                    Model->rotate(-0.5*pi<float>()/2*shooterAnim.rot +  pi<float>() / 2, vec3(0, -1, 0));
                     
                     Model->translate(-rWrist);
                     Model->translate(getCenterOfBBox(dummy->at(armIndex + 5))); //move the ctm to the hand
-                    rHandAnchor = make_shared<MatrixStack>(*Model); //snapshot the ctm at this point
+                    shooterAnim.rHandAnchor = make_shared<MatrixStack>(*Model); //snapshot the ctm at this point
                     Model->translate(-getCenterOfBBox(dummy->at(armIndex + 5)));
                     setModel(prog, Model);
                     dummy->at(armIndex + 5).draw(prog);
@@ -312,18 +375,18 @@ void Lab1Application::ballRender(std::shared_ptr<MatrixStack> Model) {
     texProg->bind();
     texture1->bind(texProg->getUniform("Texture0"));
     glUniform1i(texProg->getUniform("flip"), 1);
-    rHandAnchor->pushMatrix();
-    rHandAnchor->scale(12);
-    rHandAnchor->translate(vec3(0, 0, -1));
-    setModel(texProg, rHandAnchor);
+    shooterAnim.rHandAnchor->pushMatrix();
+    shooterAnim.rHandAnchor->scale(12);
+    shooterAnim.rHandAnchor->translate(vec3(0, 0, -1));
+    setModel(texProg, shooterAnim.rHandAnchor);
     if (firstHandRender) {
-        handPos = vec3(rHandAnchor->topMatrix()[3][0], rHandAnchor->topMatrix()[3][1], rHandAnchor->topMatrix()[3][2]);
+        handPos = vec3(shooterAnim.rHandAnchor->topMatrix()[3][0], shooterAnim.rHandAnchor->topMatrix()[3][1], shooterAnim.rHandAnchor->topMatrix()[3][2]);
         firstHandRender = false;
     }
     
     
     ball->draw(texProg);
-    rHandAnchor->popMatrix();
+    shooterAnim.rHandAnchor->popMatrix();
     texProg->unbind();
 }
 
