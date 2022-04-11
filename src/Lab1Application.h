@@ -55,15 +55,19 @@ private:
         glm::vec3 v;
         float rot;
         bool firstShotRender = false;
+        bool firstHandRender = true;
         bool isActive = false;
         bool lobbed = false;
         double timeSinceThrown = 0.0;
     }BallPhysics;
     BallPhysics ballPhysics;
     
+    
+    
     typedef struct ShooterAnim{
         float rot = 0;
         float kickSpeed = 0;
+        glm::vec3 handPos = glm::vec3(0, 0, 0);
         std::shared_ptr<MatrixStack> rHandAnchor;
     }ShooterAnim;
     ShooterAnim shooterAnim;

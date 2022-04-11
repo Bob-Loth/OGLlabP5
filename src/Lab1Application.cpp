@@ -69,7 +69,7 @@ void Lab1Application::render(float frametime) {
     glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
     glUniform3f(texProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
     glUniform1f(texProg->getUniform("alpha"), 1.0f);
-    texture2->bind(texProg->getUniform("Texture0"));
+    textures[2]->bind(texProg->getUniform("Texture0"));
     glUniform1i(texProg->getUniform("flip"), 1);
     if (ballPhysics.isActive) {
         updateBallPhysics();
@@ -217,7 +217,7 @@ void Lab1Application::updateBallPhysics() {
 void Lab1Application::drawBallPhysics(std::shared_ptr<MatrixStack> Model) {
     texProg->bind();
     
-    texture1->bind(texProg->getUniform("Texture0"));
+    textures[1]->bind(texProg->getUniform("Texture0"));
     glUniform1i(texProg->getUniform("flip"), 1);
 
     Model->pushMatrix();
@@ -373,15 +373,15 @@ void Lab1Application::shooterRightArmRender(std::shared_ptr<MatrixStack> Model) 
 
 void Lab1Application::ballRender(std::shared_ptr<MatrixStack> Model) {
     texProg->bind();
-    texture1->bind(texProg->getUniform("Texture0"));
+    textures[1]->bind(texProg->getUniform("Texture0"));
     glUniform1i(texProg->getUniform("flip"), 1);
     shooterAnim.rHandAnchor->pushMatrix();
     shooterAnim.rHandAnchor->scale(12);
     shooterAnim.rHandAnchor->translate(vec3(0, 0, -1));
     setModel(texProg, shooterAnim.rHandAnchor);
-    if (firstHandRender) {
-        handPos = vec3(shooterAnim.rHandAnchor->topMatrix()[3][0], shooterAnim.rHandAnchor->topMatrix()[3][1], shooterAnim.rHandAnchor->topMatrix()[3][2]);
-        firstHandRender = false;
+    if (ballPhysics.firstHandRender) {
+        shooterAnim.handPos = vec3(shooterAnim.rHandAnchor->topMatrix()[3][0], shooterAnim.rHandAnchor->topMatrix()[3][1], shooterAnim.rHandAnchor->topMatrix()[3][2]);
+        ballPhysics.firstHandRender = false;
     }
     
     
@@ -394,7 +394,7 @@ void Lab1Application::skyBoxRender(std::shared_ptr<MatrixStack> Model) {
     texProg->bind();
     glUniform1i(texProg->getUniform("flip"), -1);
     glUniform3f(texProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
-    texture2->bind(texProg->getUniform("Texture0"));
+    textures[2]->bind(texProg->getUniform("Texture0"));
     Model->loadIdentity();
     Model->scale(40.0f);
     setModel(texProg, Model);
@@ -589,45 +589,46 @@ void Lab1Application::initGround() {
     glGenVertexArrays(1, &GroundVertexArrayID);
     glBindVertexArray(GroundVertexArrayID);
 
-    g_GiboLen = 6;
-    glGenBuffers(1, &GrndBuffObj);
-    glBindBuffer(GL_ARRAY_BUFFER, GrndBuffObj);
+    ground.giboLen = 6;
+    glGenBuffers(1, &ground.buffObj);
+    glBindBuffer(GL_ARRAY_BUFFER, ground.buffObj);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GrndPos), GrndPos, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &GrndNorBuffObj);
-    glBindBuffer(GL_ARRAY_BUFFER, GrndNorBuffObj);
+    glGenBuffers(1, &ground.norBuffObj);
+    glBindBuffer(GL_ARRAY_BUFFER, ground.norBuffObj);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GrndNorm), GrndNorm, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &GrndTexBuffObj);
-    glBindBuffer(GL_ARRAY_BUFFER, GrndTexBuffObj);
+    glGenBuffers(1, &ground.texBuffObj);
+    glBindBuffer(GL_ARRAY_BUFFER, ground.texBuffObj);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GrndTex), GrndTex, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &GIndxBuffObj);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
+    glGenBuffers(1, &ground.indexBuffObj);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ground.indexBuffObj);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
 }
 
 void Lab1Application::initTex(const std::string& resourceDirectory) {
     //read in and load the texture
-    texture0 = make_shared<Texture>();
-    texture0->setFilename(resourceDirectory + "/water.jpg");
-    texture0->init();
-    texture0->setUnit(0);
-    texture0->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+    
+    textures.emplace_back(make_shared<Texture>());
+    textures[0]->setFilename(resourceDirectory + "/water.jpg");
+    textures[0]->init();
+    textures[0]->setUnit(0);
+    textures[0]->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
     //water polo ball texture
-    texture1 = make_shared<Texture>();
-    texture1->setFilename(resourceDirectory + "/ballTex.png");
-    texture1->initAlpha();
-    texture1->setUnit(1);
-    texture1->setWrapModes(GL_REPEAT, GL_REPEAT);
+    textures.emplace_back(make_shared<Texture>());
+    textures[1]->setFilename(resourceDirectory + "/ballTex.png");
+    textures[1]->initAlpha();
+    textures[1]->setUnit(1);
+    textures[1]->setWrapModes(GL_REPEAT, GL_REPEAT);
 
     //skybox texture
-    texture2 = make_shared<Texture>();
-    texture2->setFilename(resourceDirectory + "/cartoonSky.png");
-    texture2->init();
-    texture2->setUnit(2);
-    texture2->setWrapModes(GL_REPEAT, GL_REPEAT);
+    textures.emplace_back(make_shared<Texture>());
+    textures[2]->setFilename(resourceDirectory + "/cartoonSky.png");
+    textures[2]->init();
+    textures[2]->setUnit(2);
+    textures[2]->setWrapModes(GL_REPEAT, GL_REPEAT);
 }
 
 void Lab1Application::SetMaterial(std::shared_ptr<Program> curS, int i) {

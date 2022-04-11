@@ -4,6 +4,25 @@
 using namespace glm;
 using namespace std;
 
+std::vector<glm::vec3> Application::getMultiShapeBBox(std::shared_ptr<std::vector<Shape>> shapes) {
+    std::vector<glm::vec3> BBox;
+    BBox.push_back(glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX));
+    BBox.push_back(glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
+
+    for (size_t i = 0; i < shapes->size(); ++i) {
+        //x
+        if (shapes->at(i).min.x < BBox.at(0).x) BBox.at(0).x = shapes->at(i).min.x;
+        if (shapes->at(i).max.x > BBox.at(1).x) BBox.at(1).x = shapes->at(i).min.x;
+        //y
+        if (shapes->at(i).min.y < BBox.at(0).y) BBox.at(0).y = shapes->at(i).min.y;
+        if (shapes->at(i).max.y > BBox.at(1).y) BBox.at(1).y = shapes->at(i).max.y;
+        //z
+        if (shapes->at(i).min.z < BBox.at(0).z) BBox.at(0).z = shapes->at(i).min.z;
+        if (shapes->at(i).max.z > BBox.at(1).z) BBox.at(1).z = shapes->at(i).max.z;
+    }
+    return BBox;
+}
+
 void Application::resize_obj(std::vector<tinyobj::shape_t>& shapes) {
     float minX, minY, minZ;
     float maxX, maxY, maxZ;
@@ -89,8 +108,6 @@ void Application::processWASDInput() {
 }
 
 void Application::mouseMovementCallback(GLFWwindow* window, double posX, double posY) {
-
-    
     if (firstMouse) {
         mousePrevX = posX;
         mousePrevY = posY;
@@ -131,27 +148,27 @@ void Application::drawGround(std::shared_ptr<Program> curS) {
     glBindVertexArray(GroundVertexArrayID);
     glUniform1f(curS->getUniform("alpha"), 0.6f);
     glUniform1i(curS->getUniform("flip"), 1);
-    texture0->bind(curS->getUniform("Texture0"));
+    textures[0]->bind(curS->getUniform("Texture0"));
     //draw the ground plane
     mat4 ScaleS = glm::scale(glm::mat4(1.0f), vec3(0.15,1,0.6));
     mat4 ctm = ScaleS;
     glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
 
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, GrndBuffObj);
+    glBindBuffer(GL_ARRAY_BUFFER, ground.buffObj);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, GrndNorBuffObj);
+    glBindBuffer(GL_ARRAY_BUFFER, ground.norBuffObj);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glEnableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER, GrndTexBuffObj);
+    glBindBuffer(GL_ARRAY_BUFFER, ground.texBuffObj);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
     // draw!
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
-    glDrawElements(GL_TRIANGLES, g_GiboLen, GL_UNSIGNED_SHORT, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ground.indexBuffObj);
+    glDrawElements(GL_TRIANGLES, ground.giboLen, GL_UNSIGNED_SHORT, 0);
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
