@@ -14,9 +14,11 @@ void Lab1Application::checkCollisions(){
     //TODO make a sensible collision algorithm with the required added entities.
 }
 
+
+
 void Lab1Application::render(float frametime) {
     
-    processWASDInput();
+    camera.processWASDInput(shooterAnim.pos);
     checkCollisions();
     // Get current frame buffer size.
     int width, height;
@@ -41,17 +43,7 @@ void Lab1Application::render(float frametime) {
     // View is behind shooter
     View->pushMatrix();
     
-    View->loadIdentity();
-    vec3 target = normalize(vec3(
-        cos(xRot) * cos(yRot), //x
-        sin(yRot), //y
-        sin(xRot) * cos(yRot))); //z
-    vec3 up = vec3(0, 1, 0);
-    mat4 lookAt = glm::lookAt(
-        eyePos - target, //eyepos
-        eyePos + target,
-        up); //up
-    View->multMatrix(lookAt);
+    camera.updateView(View);
 
     // Draw the scene
     prog->bind();
@@ -99,6 +91,31 @@ void Lab1Application::render(float frametime) {
 
 }
 
+void Lab1Application::mouseMovementCallback(GLFWwindow* window, double posX, double posY) {
+    if (camera.firstMouse) {
+        camera.mousePrevX = posX;
+        camera.mousePrevY = posY;
+        camera.firstMouse = false;
+    }
+    
+    //do stuff with current and previous values
+    camera.deltaMouseX = posX - camera.mousePrevX;
+    camera.deltaMouseY = camera.mousePrevY - posY;
+    camera.xRot += camera.xSensitivity * camera.deltaMouseX;
+    camera.yRot += camera.ySensitivity * camera.deltaMouseY;
+    //cap
+    if (camera.yRot > glm::radians(80.0f)) camera.yRot = glm::radians(80.0f);
+    if (camera.yRot < -glm::radians(80.0f)) camera.yRot = -glm::radians(80.0f);
+    //set the previous values
+    camera.mousePrevX = posX;
+    camera.mousePrevY = posY;
+    //update gaze and cameraRight vectors w and u
+    camera.w = -normalize(vec3(cos(camera.xRot) * cos(camera.yRot), sin(camera.yRot), sin(camera.xRot) * cos(camera.yRot)));
+    camera.u = cross(camera.w, vec3(0, 1, 0));
+}
+
+
+
 void Lab1Application::mouseCallback(GLFWwindow *window, int button, int action, int mods){
     double posX, posY;
 
@@ -118,10 +135,10 @@ void Lab1Application::mouseCallback(GLFWwindow *window, int button, int action, 
         ballPhysics.firstShotRender = true;
         ballPhysics.isActive = true;
         if (ballPhysics.lobbed) {
-            ballPhysics.v = physics.FORCE_MULT * 300 * -vec3(w.x, w.y - 1, w.z);
+            ballPhysics.v = physics.FORCE_MULT * 300 * -vec3(camera.w.x, camera.w.y - 1, camera.w.z);
         }
         else {
-            ballPhysics.v = physics.FORCE_MULT * 500 * -vec3(w.x, w.y - 0.5, w.z);
+            ballPhysics.v = physics.FORCE_MULT * 500 * -vec3(camera.w.x, camera.w.y - 0.5, camera.w.z);
         }
         ballPhysics.timeSinceThrown = cumulativeFrametime;
     }
@@ -135,37 +152,37 @@ void Lab1Application::keyCallback(GLFWwindow *window, int key, int scancode, int
     
     
     if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-        isWASDPressed[0] = true;
+        camera.isWASDPressed[0] = true;
         //eyePos -= movementSensitivity * w;
     }
     
     if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-        isWASDPressed[1] = true;
+        camera.isWASDPressed[1] = true;
         //eyePos += movementSensitivity * u;
     }
     if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-        isWASDPressed[2] = true;
+        camera.isWASDPressed[2] = true;
         //eyePos += movementSensitivity * w;
     }
 
     if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-        isWASDPressed[3] = true;
+        camera.isWASDPressed[3] = true;
         //eyePos -= movementSensitivity * u;
     }
 
     if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
-        isWASDPressed[0] = false;
+        camera.isWASDPressed[0] = false;
     }
 
     if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
-        isWASDPressed[1] = false;
+        camera.isWASDPressed[1] = false;
     }
     if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
-        isWASDPressed[2] = false;
+        camera.isWASDPressed[2] = false;
     }
 
     if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
-        isWASDPressed[3] = false;
+        camera.isWASDPressed[3] = false;
     }
 
     //move light
@@ -183,10 +200,10 @@ void Lab1Application::keyCallback(GLFWwindow *window, int key, int scancode, int
         glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     }
     if (key == GLFW_KEY_C && action == GLFW_PRESS) {
-        movementSensitivity /= 2;
+        camera.movementSensitivity /= 2;
     }
     if (key == GLFW_KEY_V && action == GLFW_PRESS) {
-        movementSensitivity *= 2;
+        camera.movementSensitivity *= 2;
     }
 }
 
@@ -197,7 +214,7 @@ void Lab1Application::updateBallPhysics() {
     if (depth > 0.0) {
         ballPhysics.v += physics.FORCE_MULT * (physics.buoyancy * (1.0f + 0.6f * depth));
         ballPhysics.v.x = 0.975 * ballPhysics.v.x;
-        if (ballPhysics.pos.y - (shooterTrans.y + 0.6f) < 0.05 && ballPhysics.v.y < 0) {
+        if (ballPhysics.pos.y - (shooterAnim.pos.y + 0.6f) < 0.05 && ballPhysics.v.y < 0) {
             
             if (length(vec3(ballPhysics.v.x, 0.0f, ballPhysics.v.z)) > 0.04) {
                 ballPhysics.v.y = -ballPhysics.v.y;
@@ -279,9 +296,9 @@ void Lab1Application::shooterRender(std::shared_ptr<MatrixStack> Model) {
     glUniform3f(prog->getUniform("MatSpec"), 0.65f, 0.2f, 0.2f);
     glUniform1f(prog->getUniform("MatShine"), 200.0f);
     Model->loadIdentity();
-    Model->translate(shooterTrans);
+    Model->translate(shooterAnim.pos);
     Model->rotate(pi<float>() / 2, vec3(-1, 0, 0));
-    Model->rotate(-xRot, vec3(0, 0, 1));
+    Model->rotate(-camera.xRot, vec3(0, 0, 1));
     Model->scale(0.0050f);
     //draw the lower body
     setModel(prog, Model);

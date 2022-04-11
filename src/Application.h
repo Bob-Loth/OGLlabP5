@@ -1,5 +1,5 @@
-#ifndef Application_hpp
-#define Application_hpp
+#ifndef Application_h
+#define Application_h
 
 #include <memory>
 
@@ -10,18 +10,17 @@
 #include "MatrixStack.h"
 #include "Texture.h"
 #include "GLSL.h"
+#include "Camera.h"
+
 
 class Application : public EventCallbacks
 {
 public:
     WindowManager * windowManager = nullptr;
     
-    double mousePrevX, mousePrevY, deltaMouseX, deltaMouseY;
-    double xSensitivity = 0.01;
-    double ySensitivity = 0.01;
+    
     // Our shader program - use this one for Blinn-Phong
     std::shared_ptr<Program> prog;
-
     //Our shader program for textures
     std::shared_ptr<Program> texProg;
 
@@ -49,24 +48,13 @@ public:
     
     float cumulativeFrametime = 0.0f;
 
-    //global data (larger program should be encapsulated)
-    float xRot = glm::radians(-90.0f), yRot = 0;
-    int wState = GLFW_RELEASE, aState = GLFW_RELEASE, sState = GLFW_RELEASE, dState = GLFW_RELEASE;
-    glm::vec3 shooterTrans = glm::vec3(0, 0, -7.3);
+    //camera data
+    Camera camera;
     
-    glm::vec3 dEyePos = glm::vec3(0, 2, 0);
-    glm::vec3 w = glm::vec3(0, 0, 0);
-    glm::vec3 eyePos = shooterTrans + glm::vec3(w.x, w.y + 1, w.z);
-    glm::vec3 u = glm::vec3(0, 0, 0);
-    
-    bool firstMouse = true;
-    float movementSensitivity = 0.025;
-    
-    
-    //animation data
+    //global animation/misc data
     float lightTrans = 0;
     
-    bool isWASDPressed[4] = { false, false, false, false };
+    
     glm::vec3 getCenterOfBBox(Shape s) {
         return glm::vec3(
             (s.max.x + s.min.x) / 2,
@@ -78,14 +66,12 @@ public:
     // 1 is the highest, that describes the bounding box.
     std::vector<glm::vec3> getMultiShapeBBox(std::shared_ptr<std::vector<Shape>> shapes);
     
-    //helps with smoother camera movement
-    virtual void processWASDInput();
     //does nothing by default
     virtual void checkCollisions(){};
 
     virtual void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) = 0;
     virtual void mouseCallback(GLFWwindow *window, int button, int action, int mods) = 0;
-    virtual void mouseMovementCallback(GLFWwindow* window, double posX, double posY);
+    //mouse movement implemented in concrete class.
     //by default, does nothing
     virtual void scrollCallback(GLFWwindow* window, double deltaX, double deltaY){}
     virtual void resizeCallback(GLFWwindow *window, int width, int height){ glViewport(0, 0, width, height); }

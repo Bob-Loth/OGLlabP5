@@ -114,7 +114,6 @@ void Shape::measure()
 }
 
 
-
 void Shape::init(bool textured)
 {
 	// Initialize the vertex array object

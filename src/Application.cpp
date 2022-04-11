@@ -84,52 +84,6 @@ void Application::resize_obj(std::vector<tinyobj::shape_t>& shapes) {
     }
 }
 
-void Application::processWASDInput() {
-    if (isWASDPressed[0]) {
-        eyePos -= movementSensitivity * vec3(w.x, 0.0f, w.z);
-        shooterTrans -= movementSensitivity * vec3(w.x, 0.0f, w.z);
-        dEyePos = eyePos;
-    }
-    if (isWASDPressed[1]) {
-        eyePos += movementSensitivity * vec3(u.x, 0.0f, u.z);
-        shooterTrans += movementSensitivity * vec3(u.x, 0.0f, u.z);
-        dEyePos = eyePos;
-    }
-    if (isWASDPressed[2]) {
-        eyePos += movementSensitivity * vec3(w.x, 0.0f, w.z);
-        shooterTrans += movementSensitivity * vec3(w.x, 0.0f, w.z);
-        dEyePos = eyePos;
-    }
-    if (isWASDPressed[3]) {
-        eyePos -= movementSensitivity * vec3(u.x, 0.0f, u.z);
-        shooterTrans -= movementSensitivity * vec3(u.x, 0.0f, u.z);
-        dEyePos = eyePos;
-    }
-}
-
-void Application::mouseMovementCallback(GLFWwindow* window, double posX, double posY) {
-    if (firstMouse) {
-        mousePrevX = posX;
-        mousePrevY = posY;
-        firstMouse = false;
-    }
-    
-    //do stuff with current and previous values
-    deltaMouseX = posX - mousePrevX;
-    deltaMouseY = mousePrevY - posY;
-    xRot += xSensitivity * deltaMouseX;
-    yRot += ySensitivity * deltaMouseY;
-    //cap
-    if (yRot > glm::radians(80.0f)) yRot = glm::radians(80.0f);
-    if (yRot < -glm::radians(80.0f)) yRot = -glm::radians(80.0f);
-    //set the previous values
-    mousePrevX = posX;
-    mousePrevY = posY;
-    //update gaze and cameraRight vectors w and u
-    w = -normalize(vec3(cos(xRot) * cos(yRot), sin(yRot), sin(xRot) * cos(yRot)));
-    u = cross(w, vec3(0, 1, 0));
-}
-
 void Application::SetModel(glm::vec3 trans, float rotY, float rotX, float sc, std::shared_ptr<Program> curS) {
     mat4 Trans = glm::translate( glm::mat4(1.0f), trans);
     mat4 RotX = glm::rotate( glm::mat4(1.0f), rotX, vec3(1, 0, 0));
