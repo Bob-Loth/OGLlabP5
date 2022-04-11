@@ -4,6 +4,14 @@
 using namespace glm;
 using namespace std;
 
+glm::vec3 Application::getCenterOfBBox(Shape s) {
+    return glm::vec3(
+        (s.max.x + s.min.x) / 2,
+        (s.max.y + s.min.y) / 2,
+        (s.max.z + s.min.z) / 2
+    );
+}
+
 std::vector<glm::vec3> Application::getMultiShapeBBox(std::shared_ptr<std::vector<Shape>> shapes) {
     std::vector<glm::vec3> BBox;
     BBox.push_back(glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX));

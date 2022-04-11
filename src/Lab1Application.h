@@ -44,6 +44,17 @@ public:
     void render(float frametime);
     
 private:
+    std::shared_ptr<Shape> sphere;
+    std::shared_ptr<std::vector<Shape>> dummy = std::make_shared<std::vector<Shape>>();
+    std::vector<glm::vec3> dummyBBox;
+    std::shared_ptr<Shape> ball;
+    std::shared_ptr<Shape> sky;
+    
+    
+    //global animation/misc data
+    float lightTrans = 0;
+    float cumulativeFrametime = 0.0f;
+
     //general physics data
     typedef struct Physics {
         float FORCE_MULT = 0.0001f;

@@ -2,7 +2,7 @@
 #define Application_h
 
 #include <memory>
-
+#include <map>
 
 #include "WindowManager.h"
 #include "Program.h"
@@ -18,17 +18,13 @@ class Application : public EventCallbacks
 public:
     WindowManager * windowManager = nullptr;
     
+    // any shaders
+    std::map<std::string, std::shared_ptr<Program>> shaders;
     
-    // Our shader program - use this one for Blinn-Phong
-    std::shared_ptr<Program> prog;
-    //Our shader program for textures
-    std::shared_ptr<Program> texProg;
-
-    std::shared_ptr<Shape> sphere;
-    std::shared_ptr<std::vector<Shape>> dummy = std::make_shared<std::vector<Shape>>();
-    std::vector<glm::vec3> dummyBBox;
-    std::shared_ptr<Shape> ball;
-    std::shared_ptr<Shape> sky;
+    // the texture data, initialized in initTex
+    std::vector<std::shared_ptr<Texture>> textures;
+    
+    
     //global data for ground plane - direct load constant defined CPU data to GPU (not obj)
     typedef struct Ground{
         GLuint buffObj;
@@ -39,29 +35,13 @@ public:
     }Ground;
     Ground ground;
     
-    
     //ground VAO
     GLuint GroundVertexArrayID;
-
-    //the texture data, initialized in initTex
-    std::vector<std::shared_ptr<Texture>> textures;
-    
-    float cumulativeFrametime = 0.0f;
 
     //camera data
     Camera camera;
     
-    //global animation/misc data
-    float lightTrans = 0;
-    
-    
-    glm::vec3 getCenterOfBBox(Shape s) {
-        return glm::vec3(
-            (s.max.x + s.min.x) / 2,
-            (s.max.y + s.min.y) / 2,
-            (s.max.z + s.min.z) / 2
-        );
-    }
+    glm::vec3 getCenterOfBBox(Shape s);
     // returns a vector of size 2. position 0 is the lowest-value point,
     // 1 is the highest, that describes the bounding box.
     std::vector<glm::vec3> getMultiShapeBBox(std::shared_ptr<std::vector<Shape>> shapes);

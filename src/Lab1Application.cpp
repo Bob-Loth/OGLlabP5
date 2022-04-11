@@ -46,23 +46,23 @@ void Lab1Application::render(float frametime) {
     camera.updateView(View);
 
     // Draw the scene
-    prog->bind();
-    glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-    glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
-    glUniform3f(prog->getUniform("lightPos"), -2.0f , 2.0f, 2.0f - lightTrans);
+    shaders["noTex"]->bind();
+    glUniformMatrix4fv(shaders["noTex"]->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+    glUniformMatrix4fv(shaders["noTex"]->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
+    glUniform3f(shaders["noTex"]->getUniform("lightPos"), -2.0f , 2.0f, 2.0f - lightTrans);
     
     //shooter
     shooterRender(Model);
-    prog->unbind();
+    shaders["noTex"]->unbind();
 
     //switch shaders to the texture mapping shader and draw the ground
-    texProg->bind();
-    glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-    glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
-    glUniform3f(texProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
-    glUniform1f(texProg->getUniform("alpha"), 1.0f);
-    textures[2]->bind(texProg->getUniform("Texture0"));
-    glUniform1i(texProg->getUniform("flip"), 1);
+    shaders["tex"]->bind();
+    glUniformMatrix4fv(shaders["tex"]->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+    glUniformMatrix4fv(shaders["tex"]->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
+    glUniform3f(shaders["tex"]->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
+    glUniform1f(shaders["tex"]->getUniform("alpha"), 1.0f);
+    textures[2]->bind(shaders["tex"]->getUniform("Texture0"));
+    glUniform1i(shaders["tex"]->getUniform("flip"), 1);
     if (ballPhysics.isActive) {
         updateBallPhysics();
         drawBallPhysics(Model);
@@ -73,11 +73,11 @@ void Lab1Application::render(float frametime) {
     else {
         ballRender(Model);
     }
-    texProg->unbind();
+    shaders["tex"]->unbind();
     
     
     skyBoxRender(Model);
-    drawGround(texProg);
+    drawGround(shaders["tex"]);
 
     
     //how fast the shooter does his animation
@@ -232,10 +232,10 @@ void Lab1Application::updateBallPhysics() {
 }
 
 void Lab1Application::drawBallPhysics(std::shared_ptr<MatrixStack> Model) {
-    texProg->bind();
+    shaders["tex"]->bind();
     
-    textures[1]->bind(texProg->getUniform("Texture0"));
-    glUniform1i(texProg->getUniform("flip"), 1);
+    textures[1]->bind(shaders["tex"]->getUniform("Texture0"));
+    glUniform1i(shaders["tex"]->getUniform("flip"), 1);
 
     Model->pushMatrix();
     
@@ -247,10 +247,10 @@ void Lab1Application::drawBallPhysics(std::shared_ptr<MatrixStack> Model) {
     Model->scale(0.08f);
     ballPhysics.rot += 2*length(ballPhysics.v);
     Model->rotate(ballPhysics.rot, cross(vec3(0, 1, 0), ballPhysics.v));
-    setModel(texProg, Model);
-    ball->draw(texProg);
+    setModel(shaders["tex"], Model);
+    ball->draw(shaders["tex"]);
     
-    texProg->unbind();
+    shaders["tex"]->unbind();
 }
 
 void Lab1Application::shooterLegRender(std::shared_ptr<MatrixStack> Model, bool isRight) {
@@ -266,45 +266,45 @@ void Lab1Application::shooterLegRender(std::shared_ptr<MatrixStack> Model, bool 
         Model->translate(pivotRPelvis);
         Model->rotate(flip * 0.5 * shooterAnim.kickSpeed, vec3(0, 1, 0));
         Model->translate(-pivotRPelvis);
-        setModel(prog, Model);
-        dummy->at(4 + offset).draw(prog);
-        dummy->at(5 + offset).draw(prog);
+        setModel(shaders["noTex"], Model);
+        dummy->at(4 + offset).draw(shaders["noTex"]);
+        dummy->at(5 + offset).draw(shaders["noTex"]);
         Model->pushMatrix();
             vec3 pivotRKnee = getCenterOfBBox(dummy->at(3 + offset));
             Model->translate(pivotRKnee);
             Model->rotate(flip * 0.25 * shooterAnim.kickSpeed + pi<float>() / 8, vec3(0, 1, 0));
             Model->translate(-pivotRKnee);
-            setModel(prog, Model);
-            dummy->at(2 + offset).draw(prog);
-            dummy->at(3 + offset).draw(prog);
+            setModel(shaders["noTex"], Model);
+            dummy->at(2 + offset).draw(shaders["noTex"]);
+            dummy->at(3 + offset).draw(shaders["noTex"]);
             Model->pushMatrix();
                 vec3 pivotRAnkle = getCenterOfBBox(dummy->at(1 + offset));
                 Model->translate(pivotRAnkle);
                 Model->rotate(pi<float>() / 3, vec3(0, 1, 0));
                 Model->translate(-pivotRAnkle);
-                setModel(prog, Model);
-                dummy->at(0 + offset).draw(prog);
-                dummy->at(1 + offset).draw(prog);
+                setModel(shaders["noTex"], Model);
+                dummy->at(0 + offset).draw(shaders["noTex"]);
+                dummy->at(1 + offset).draw(shaders["noTex"]);
             Model->popMatrix();
         Model->popMatrix();
     Model->popMatrix();
 }
 void Lab1Application::shooterRender(std::shared_ptr<MatrixStack> Model) {
     Model->pushMatrix();
-    glUniform3f(prog->getUniform("MatAmb"), 0.065f, 0.020f, 0.020f);
-    glUniform3f(prog->getUniform("MatDif"), 0.65f, 0.2f, 0.2f);
-    glUniform3f(prog->getUniform("MatSpec"), 0.65f, 0.2f, 0.2f);
-    glUniform1f(prog->getUniform("MatShine"), 200.0f);
+    glUniform3f(shaders["noTex"]->getUniform("MatAmb"), 0.065f, 0.020f, 0.020f);
+    glUniform3f(shaders["noTex"]->getUniform("MatDif"), 0.65f, 0.2f, 0.2f);
+    glUniform3f(shaders["noTex"]->getUniform("MatSpec"), 0.65f, 0.2f, 0.2f);
+    glUniform1f(shaders["noTex"]->getUniform("MatShine"), 200.0f);
     Model->loadIdentity();
     Model->translate(shooterAnim.pos);
     Model->rotate(pi<float>() / 2, vec3(-1, 0, 0));
     Model->rotate(-camera.xRot, vec3(0, 0, 1));
     Model->scale(0.0050f);
     //draw the lower body
-    setModel(prog, Model);
+    setModel(shaders["noTex"], Model);
     //draw hips and belly
     for (size_t i = 12; i < 14; i++) {
-        dummy->at(i).draw(prog);
+        dummy->at(i).draw(shaders["noTex"]);
     }
     //draw right leg
     shooterLegRender(Model, true);
@@ -319,8 +319,8 @@ void Lab1Application::shooterRender(std::shared_ptr<MatrixStack> Model) {
             Model->rotate(0.5*shooterAnim.rot, vec3(0, 0, 1));
             Model->rotate(0.2*shooterAnim.rot, vec3(0, 1, 0));
             Model->translate(-pivotBelly);
-            setModel(prog, Model);
-            dummy->at(14).draw(prog);
+            setModel(shaders["noTex"], Model);
+            dummy->at(14).draw(shaders["noTex"]);
             //draw the right arm
             shooterRightArmRender(Model);
             // draw the left arm
@@ -332,9 +332,9 @@ void Lab1Application::shooterRender(std::shared_ptr<MatrixStack> Model) {
                 Model->rotate(0.5*shooterAnim.rot, vec3(0, 0, -1));
                 Model->rotate(0.2 * shooterAnim.rot, vec3(0, -1, 0));
                 Model->translate(-pivotNeck);
-                setModel(prog, Model);
+                setModel(shaders["noTex"], Model);
                 for (size_t i = 27; i < dummy->size(); i++) {
-                    dummy->at(i).draw(prog);
+                    dummy->at(i).draw(shaders["noTex"]);
                 }
             Model->popMatrix();
         Model->popMatrix();
@@ -349,17 +349,17 @@ void Lab1Application::shooterRightArmRender(std::shared_ptr<MatrixStack> Model) 
     Model->pushMatrix();
         vec3 pivotTorso = getCenterOfBBox(dummy->at(14));
         Model->translate(vec3(0, mirror * (1 * -0.5 + 5), 3 * -0.5));
-        setModel(prog, Model);
-        dummy->at(armIndex).draw(prog);
+        setModel(shaders["noTex"], Model);
+        dummy->at(armIndex).draw(shaders["noTex"]);
             Model->pushMatrix();
             vec3 rShoulder = getCenterOfBBox(dummy->at(armIndex));
             Model->translate(rShoulder); //center of shoulder
             //rotate upper arm towards goal just a small amount at the end of the throw. Hips, chest, and elbow does most of the work.
             Model->rotate((pi<float>() / 8) * shoulderRot + (pi<float>() / 8), vec3(mirror * 0, 0, 1));
             Model->translate(-rShoulder);
-            setModel(prog, Model);
-            dummy->at(armIndex + 1).draw(prog);
-            dummy->at(armIndex + 2).draw(prog);
+            setModel(shaders["noTex"], Model);
+            dummy->at(armIndex + 1).draw(shaders["noTex"]);
+            dummy->at(armIndex + 2).draw(shaders["noTex"]);
 
                 Model->pushMatrix();
                     vec3 rElbow = getCenterOfBBox(dummy->at(armIndex + 2));
@@ -367,10 +367,10 @@ void Lab1Application::shooterRightArmRender(std::shared_ptr<MatrixStack> Model) 
                     Model->rotate((pi<float>() / 4), vec3(mirror * -1, 0, 0));
                     Model->rotate((pi<float>() / 4) * elbowRot- (pi<float>() / 4), vec3(mirror * 0, 1, 0));
                     Model->translate(-rElbow);
-                    setModel(prog, Model);
-                    setModel(prog, Model);
-                    dummy->at(armIndex + 3).draw(prog);
-                    dummy->at(armIndex + 4).draw(prog);
+                    setModel(shaders["noTex"], Model);
+                    setModel(shaders["noTex"], Model);
+                    dummy->at(armIndex + 3).draw(shaders["noTex"]);
+                    dummy->at(armIndex + 4).draw(shaders["noTex"]);
                     Model->pushMatrix();
                     vec3 rWrist = getCenterOfBBox(dummy->at(armIndex + 4));
                     Model->translate(rWrist); //center of wrist
@@ -380,8 +380,8 @@ void Lab1Application::shooterRightArmRender(std::shared_ptr<MatrixStack> Model) 
                     Model->translate(getCenterOfBBox(dummy->at(armIndex + 5))); //move the ctm to the hand
                     shooterAnim.rHandAnchor = make_shared<MatrixStack>(*Model); //snapshot the ctm at this point
                     Model->translate(-getCenterOfBBox(dummy->at(armIndex + 5)));
-                    setModel(prog, Model);
-                    dummy->at(armIndex + 5).draw(prog);
+                    setModel(shaders["noTex"], Model);
+                    dummy->at(armIndex + 5).draw(shaders["noTex"]);
                 Model->popMatrix();
             Model->popMatrix();
         Model->popMatrix();
@@ -389,33 +389,33 @@ void Lab1Application::shooterRightArmRender(std::shared_ptr<MatrixStack> Model) 
 }
 
 void Lab1Application::ballRender(std::shared_ptr<MatrixStack> Model) {
-    texProg->bind();
-    textures[1]->bind(texProg->getUniform("Texture0"));
-    glUniform1i(texProg->getUniform("flip"), 1);
+    shaders["tex"]->bind();
+    textures[1]->bind(shaders["tex"]->getUniform("Texture0"));
+    glUniform1i(shaders["tex"]->getUniform("flip"), 1);
     shooterAnim.rHandAnchor->pushMatrix();
     shooterAnim.rHandAnchor->scale(12);
     shooterAnim.rHandAnchor->translate(vec3(0, 0, -1));
-    setModel(texProg, shooterAnim.rHandAnchor);
+    setModel(shaders["tex"], shooterAnim.rHandAnchor);
     if (ballPhysics.firstHandRender) {
         shooterAnim.handPos = vec3(shooterAnim.rHandAnchor->topMatrix()[3][0], shooterAnim.rHandAnchor->topMatrix()[3][1], shooterAnim.rHandAnchor->topMatrix()[3][2]);
         ballPhysics.firstHandRender = false;
     }
     
     
-    ball->draw(texProg);
+    ball->draw(shaders["tex"]);
     shooterAnim.rHandAnchor->popMatrix();
-    texProg->unbind();
+    shaders["tex"]->unbind();
 }
 
 void Lab1Application::skyBoxRender(std::shared_ptr<MatrixStack> Model) {
-    texProg->bind();
-    glUniform1i(texProg->getUniform("flip"), -1);
-    glUniform3f(texProg->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
-    textures[2]->bind(texProg->getUniform("Texture0"));
+    shaders["tex"]->bind();
+    glUniform1i(shaders["tex"]->getUniform("flip"), -1);
+    glUniform3f(shaders["tex"]->getUniform("lightPos"), -2.0f, 2.0f, 2.0f - lightTrans);
+    textures[2]->bind(shaders["tex"]->getUniform("Texture0"));
     Model->loadIdentity();
     Model->scale(40.0f);
-    setModel(texProg, Model);
-    sky->draw(texProg);
+    setModel(shaders["tex"], Model);
+    sky->draw(shaders["tex"]);
 }
 
 void Lab1Application::shooterLeftArmRender(std::shared_ptr<MatrixStack> Model) {
@@ -425,26 +425,26 @@ void Lab1Application::shooterLeftArmRender(std::shared_ptr<MatrixStack> Model) {
     Model->pushMatrix();
         vec3 pivotTorso = getCenterOfBBox(dummy->at(14));
         Model->translate(vec3(0, mirror * (1 * -0.5 + 5), 3 * -0.5));
-        setModel(prog, Model);
-        dummy->at(armIndex).draw(prog);
+        setModel(shaders["noTex"], Model);
+        dummy->at(armIndex).draw(shaders["noTex"]);
             Model->pushMatrix();
             vec3 rShoulder = getCenterOfBBox(dummy->at(armIndex));
             Model->translate(rShoulder); //center of shoulder
             Model->rotate((pi<float>() / 4) * -0.5 - (pi<float>() / 8), vec3(mirror * -1, 0, 0));
             Model->translate(-rShoulder);
-            setModel(prog, Model);
-            dummy->at(armIndex + 1).draw(prog);
-            dummy->at(armIndex + 2).draw(prog);
+            setModel(shaders["noTex"], Model);
+            dummy->at(armIndex + 1).draw(shaders["noTex"]);
+            dummy->at(armIndex + 2).draw(shaders["noTex"]);
 
                 Model->pushMatrix();
                     vec3 rElbow = getCenterOfBBox(dummy->at(armIndex + 2));
                     Model->translate(rElbow); //center of shoulder
                     Model->rotate((pi<float>() / 6) * -0.5 - (pi<float>() / 16), vec3(mirror * -1, 0, 0));
                     Model->translate(-rElbow);
-                    setModel(prog, Model);
-                    setModel(prog, Model);
-                    dummy->at(armIndex + 3).draw(prog);
-                    dummy->at(armIndex + 4).draw(prog);
+                    setModel(shaders["noTex"], Model);
+                    setModel(shaders["noTex"], Model);
+                    dummy->at(armIndex + 3).draw(shaders["noTex"]);
+                    dummy->at(armIndex + 4).draw(shaders["noTex"]);
                     Model->pushMatrix();
                     vec3 rWrist = getCenterOfBBox(dummy->at(armIndex + 4));
                     Model->translate(rWrist); //center of shoulder
@@ -452,9 +452,9 @@ void Lab1Application::shooterLeftArmRender(std::shared_ptr<MatrixStack> Model) {
                     Model->translate(-rWrist);
                     
                     
-                    setModel(prog, Model);
+                    setModel(shaders["noTex"], Model);
                     
-                    dummy->at(armIndex + 5).draw(prog);
+                    dummy->at(armIndex + 5).draw(shaders["noTex"]);
                 Model->popMatrix();
             Model->popMatrix();
         Model->popMatrix();
@@ -481,37 +481,37 @@ void Lab1Application::init(const std::string& resourceDirectory){
 
 
     // Initialize the GLSL program that we will use for local shading
-    prog = make_shared<Program>();
-    prog->setVerbose(false);
-    prog->setShaderNames(resourceDirectory + "/simple_vert.glsl", resourceDirectory + "/simple_frag.glsl");
-    prog->init();
-    prog->addUniform("P");
-    prog->addUniform("V");
-    prog->addUniform("M");
-    prog->addUniform("MatAmb");
-    prog->addUniform("MatDif");
-    prog->addUniform("MatSpec");
-    prog->addUniform("MatShine");
-    prog->addUniform("lightPos");
+    shaders["noTex"] = make_shared<Program>();
+    shaders["noTex"]->setVerbose(false);
+    shaders["noTex"]->setShaderNames(resourceDirectory + "/simple_vert.glsl", resourceDirectory + "/simple_frag.glsl");
+    shaders["noTex"]->init();
+    shaders["noTex"]->addUniform("P");
+    shaders["noTex"]->addUniform("V");
+    shaders["noTex"]->addUniform("M");
+    shaders["noTex"]->addUniform("MatAmb");
+    shaders["noTex"]->addUniform("MatDif");
+    shaders["noTex"]->addUniform("MatSpec");
+    shaders["noTex"]->addUniform("MatShine");
+    shaders["noTex"]->addUniform("lightPos");
     
-    prog->addAttribute("vertPos");
-    prog->addAttribute("vertNor");
+    shaders["noTex"]->addAttribute("vertPos");
+    shaders["noTex"]->addAttribute("vertNor");
 
     // Initialize the GLSL program that we will use for texture mapping
-    texProg = make_shared<Program>();
-    texProg->setVerbose(false);
-    texProg->setShaderNames(resourceDirectory + "/tex_vert_old.glsl", resourceDirectory + "/tex_frag0_old.glsl");
-    texProg->init();
-    texProg->addUniform("P");
-    texProg->addUniform("V");
-    texProg->addUniform("M");
-    texProg->addUniform("Texture0");
-    texProg->addUniform("alpha");
-    texProg->addUniform("lightPos");
-    texProg->addUniform("flip");
-    texProg->addAttribute("vertPos");
-    texProg->addAttribute("vertNor");
-    texProg->addAttribute("vertTex");
+    shaders["tex"] = make_shared<Program>();
+    shaders["tex"]->setVerbose(false);
+    shaders["tex"]->setShaderNames(resourceDirectory + "/tex_vert_old.glsl", resourceDirectory + "/tex_frag0_old.glsl");
+    shaders["tex"]->init();
+    shaders["tex"]->addUniform("P");
+    shaders["tex"]->addUniform("V");
+    shaders["tex"]->addUniform("M");
+    shaders["tex"]->addUniform("Texture0");
+    shaders["tex"]->addUniform("alpha");
+    shaders["tex"]->addUniform("lightPos");
+    shaders["tex"]->addUniform("flip");
+    shaders["tex"]->addAttribute("vertPos");
+    shaders["tex"]->addAttribute("vertNor");
+    shaders["tex"]->addAttribute("vertTex");
 }
 
 void Lab1Application::initGeom(const std::string& resourceDirectory){
@@ -575,7 +575,7 @@ void Lab1Application::initGeom(const std::string& resourceDirectory){
 void Lab1Application::initGround() {
 
     float g_groundSize = 20;
-    float g_groundY = 0.00;
+    float g_groundY = 0.60;
 
     // A x-z plane at y = g_groundY of dimension [-g_groundSize, g_groundSize]^2
     float GrndPos[] = {
@@ -670,22 +670,22 @@ void Lab1Application::SetMaterial(std::shared_ptr<Program> curS, int i) {
             glUniform1f(curS->getUniform("MatShine"), 27.9f);
         break;
         case 3:
-            glUniform3f(prog->getUniform("MatAmb"), 0.09f, 0.09f, 0.09f);
-            glUniform3f(prog->getUniform("MatDif"), 0.2f, 0.2f, 0.65f);
-            glUniform3f(prog->getUniform("MatSpec"), 0.2f, 0.65f, 0.2f);
-            glUniform1f(prog->getUniform("MatShine"), 120.0f);
+            glUniform3f(shaders["noTex"]->getUniform("MatAmb"), 0.09f, 0.09f, 0.09f);
+            glUniform3f(shaders["noTex"]->getUniform("MatDif"), 0.2f, 0.2f, 0.65f);
+            glUniform3f(shaders["noTex"]->getUniform("MatSpec"), 0.2f, 0.65f, 0.2f);
+            glUniform1f(shaders["noTex"]->getUniform("MatShine"), 120.0f);
         break;
         case 4:
-            glUniform3f(prog->getUniform("MatAmb"), 0.095f, 0.095f, 0.095f);
-            glUniform3f(prog->getUniform("MatDif"), 0.90f, 0.90f, 0.9f);
-            glUniform3f(prog->getUniform("MatSpec"), 0.40f, 0.40f, 0.90f);
-            glUniform1f(prog->getUniform("MatShine"), 16.0f);
+            glUniform3f(shaders["noTex"]->getUniform("MatAmb"), 0.095f, 0.095f, 0.095f);
+            glUniform3f(shaders["noTex"]->getUniform("MatDif"), 0.90f, 0.90f, 0.9f);
+            glUniform3f(shaders["noTex"]->getUniform("MatSpec"), 0.40f, 0.40f, 0.90f);
+            glUniform1f(shaders["noTex"]->getUniform("MatShine"), 16.0f);
         break;
         case 5:
-            glUniform3f(prog->getUniform("MatAmb"), 0.095f, 0.095f, 0.095f);
-            glUniform3f(prog->getUniform("MatDif"), 0.40f, 0.40f, 0.4f);
-            glUniform3f(prog->getUniform("MatSpec"), 0.40f, 0.40f, 0.40f);
-            glUniform1f(prog->getUniform("MatShine"), 16000.0f);
+            glUniform3f(shaders["noTex"]->getUniform("MatAmb"), 0.095f, 0.095f, 0.095f);
+            glUniform3f(shaders["noTex"]->getUniform("MatDif"), 0.40f, 0.40f, 0.4f);
+            glUniform3f(shaders["noTex"]->getUniform("MatSpec"), 0.40f, 0.40f, 0.40f);
+            glUniform1f(shaders["noTex"]->getUniform("MatShine"), 16000.0f);
             break;
     }
 }
