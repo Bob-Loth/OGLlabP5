@@ -37,7 +37,7 @@ public:
     void SetMaterial(std::shared_ptr<Program> curS, int i);
     void init(const std::string& resourceDirectory);
     void initGeom(const std::string& resourceDirectory);
-    void initGround();
+    void initGround(float g_groundY);
     void initTex(const std::string& resourceDirectory);
     void extracted(const std::shared_ptr<MatrixStack> &View);
     
@@ -60,6 +60,7 @@ private:
         float FORCE_MULT = 0.0001f;
         glm::vec3 g = glm::vec3(0.0f, -1.98f, 0.0f);
         glm::vec3 buoyancy = -g;
+        float groundLevel = 0.60f;
     }Physics;
     Physics physics;
     
@@ -75,7 +76,6 @@ private:
         double timeSinceThrown = 0.0;
     }BallPhysics;
     BallPhysics ballPhysics;
-    
     
     typedef struct ShooterAnim{
         glm::vec3 pos = glm::vec3(0, 0, 0);

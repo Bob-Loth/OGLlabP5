@@ -211,7 +211,7 @@ void Lab1Application::updateBallPhysics() {
     //throw the ball with high velocity, at a lower angle.
     ballPhysics.v += physics.FORCE_MULT * physics.g;
     float depth = -ballPhysics.pos.y; //depth is positive if below 0 height.
-    if (depth > 0.0) {
+    if (depth > -physics.groundLevel) {
         ballPhysics.v += physics.FORCE_MULT * (physics.buoyancy * (1.0f + 0.6f * depth));
         ballPhysics.v.x = 0.975 * ballPhysics.v.x;
         if (ballPhysics.pos.y - (shooterAnim.pos.y + 0.6f) < 0.05 && ballPhysics.v.y < 0) {
@@ -569,14 +569,13 @@ void Lab1Application::initGeom(const std::string& resourceDirectory){
         sky->init(true);
     }
     //code to load in the ground plane (CPU defined data passed to GPU)
-    initGround();
+    initGround(physics.groundLevel);
 }
 
-void Lab1Application::initGround() {
+void Lab1Application::initGround(float g_groundY) {
 
     float g_groundSize = 20;
-    float g_groundY = 0.60;
-
+    
     // A x-z plane at y = g_groundY of dimension [-g_groundSize, g_groundSize]^2
     float GrndPos[] = {
         -g_groundSize, g_groundY, -g_groundSize,
