@@ -7,7 +7,7 @@ The particle effects can get a little taxing, so if performance becomes an issue
 Most of the work for the final project involved playing around with hierarchical modeling, collision detection, forces on the ball, particle generation and mesh deformation. There's a generic third-person camera centered behind the player's view vector, which moves and rotates with the player. The player rotates in place, not the camera, so rotating the camera doesn't affect the world position of the player.
 
 # TOPICS:
-#Hierarchical Modeling:
+## Hierarchical Modeling:
 Not much has changed on this part. The goalie and shooter still have their basic time-based animations. I added a kicking motion to the shooter.
 
 ## Collision Detection:
